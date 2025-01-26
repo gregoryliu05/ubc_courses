@@ -29,6 +29,17 @@
     - Feb 12 CPSC 330 Midterm 1
     - Feb 25 CPSC 425 Midterm
     - Mar 19 CPSC 330 Midterm 2
+- Greg's Major deadlines:
+- Feb 13 COMM 438 Midterm
+- Feb 14 CPSC 320 Assignment 2
+- Feb 26 CPSC 320 Midterm
+- March 3 COMM 298 Midterm
+- March 7 CPSC 320 Assignment 3 
+- March 21 CPSC 320 Assignment 4
+
+
+
+
 
 
 #### Anything else you think is relevant to effective collaboration!
