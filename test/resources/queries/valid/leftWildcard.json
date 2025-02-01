@@ -1,0 +1,266 @@
+{
+	"title": "Left wildcard",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"sections_id": "*10"
+					}
+				},
+				{
+					"LT": {
+						"sections_avg": 60
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_uuid",
+				"sections_id",
+				"sections_title",
+				"sections_instructor",
+				"sections_dept",
+				"sections_year",
+				"sections_avg",
+				"sections_pass",
+				"sections_pass",
+				"sections_fail",
+				"sections_audit"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_uuid": "5169",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "lo, quin wai joseph",
+			"sections_dept": "math",
+			"sections_year": 2009,
+			"sections_avg": 51.49,
+			"sections_pass": 45,
+			"sections_fail": 20,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "4616",
+			"sections_id": "410",
+			"sections_title": "immunogenetics",
+			"sections_instructor": "",
+			"sections_dept": "medg",
+			"sections_year": 1900,
+			"sections_avg": 54.43,
+			"sections_pass": 5,
+			"sections_fail": 2,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "4615",
+			"sections_id": "410",
+			"sections_title": "immunogenetics",
+			"sections_instructor": "jefferies, wilfred arthur",
+			"sections_dept": "medg",
+			"sections_year": 2011,
+			"sections_avg": 54.43,
+			"sections_pass": 5,
+			"sections_fail": 2,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "29748",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 2008,
+			"sections_avg": 54.61,
+			"sections_pass": 16,
+			"sections_fail": 7,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "29747",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 2008,
+			"sections_avg": 55.65,
+			"sections_pass": 17,
+			"sections_fail": 6,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "10776",
+			"sections_id": "410",
+			"sections_title": "foundat'n eng i",
+			"sections_instructor": "",
+			"sections_dept": "civl",
+			"sections_year": 2009,
+			"sections_avg": 55.86,
+			"sections_pass": 6,
+			"sections_fail": 1,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "34001",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "desaulniers, shawn;leung, fok-shuen;sargent, pamela",
+			"sections_dept": "math",
+			"sections_year": 2013,
+			"sections_avg": 56.43,
+			"sections_pass": 74,
+			"sections_fail": 31,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "27373",
+			"sections_id": "310",
+			"sections_title": "abstr linear alg",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 1900,
+			"sections_avg": 57.78,
+			"sections_pass": 15,
+			"sections_fail": 8,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "27372",
+			"sections_id": "310",
+			"sections_title": "abstr linear alg",
+			"sections_instructor": "souto clement, juan",
+			"sections_dept": "math",
+			"sections_year": 2012,
+			"sections_avg": 57.78,
+			"sections_pass": 15,
+			"sections_fail": 8,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "5168",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "lo, quin wai joseph",
+			"sections_dept": "math",
+			"sections_year": 2009,
+			"sections_avg": 58.04,
+			"sections_pass": 72,
+			"sections_fail": 17,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "29749",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 1900,
+			"sections_avg": 58.32,
+			"sections_pass": 51,
+			"sections_fail": 18,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "27256",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "leung, fok-shuen",
+			"sections_dept": "math",
+			"sections_year": 2012,
+			"sections_avg": 58.38,
+			"sections_pass": 82,
+			"sections_fail": 13,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "34000",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "leung, fok-shuen;sargent, pamela;tba",
+			"sections_dept": "math",
+			"sections_year": 2013,
+			"sections_avg": 58.42,
+			"sections_pass": 66,
+			"sections_fail": 22,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "5170",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 1900,
+			"sections_avg": 59.11,
+			"sections_pass": 200,
+			"sections_fail": 51,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "3795",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "wong, tom",
+			"sections_dept": "math",
+			"sections_year": 2011,
+			"sections_avg": 59.32,
+			"sections_pass": 48,
+			"sections_fail": 17,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "37621",
+			"sections_id": "410",
+			"sections_title": "foundat'n eng i",
+			"sections_instructor": "",
+			"sections_dept": "civl",
+			"sections_year": 2008,
+			"sections_avg": 59.5,
+			"sections_pass": 4,
+			"sections_fail": 0,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "39937",
+			"sections_id": "110",
+			"sections_title": "begin germ 2",
+			"sections_instructor": "",
+			"sections_dept": "germ",
+			"sections_year": 2008,
+			"sections_avg": 59.61,
+			"sections_pass": 15,
+			"sections_fail": 3,
+			"sections_audit": 1
+		},
+		{
+			"sections_uuid": "34002",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "",
+			"sections_dept": "math",
+			"sections_year": 1900,
+			"sections_avg": 59.85,
+			"sections_pass": 289,
+			"sections_fail": 73,
+			"sections_audit": 0
+		},
+		{
+			"sections_uuid": "27255",
+			"sections_id": "110",
+			"sections_title": "diff calculus",
+			"sections_instructor": "leung, fok-shuen;wong, tom",
+			"sections_dept": "math",
+			"sections_year": 2012,
+			"sections_avg": 59.85,
+			"sections_pass": 65,
+			"sections_fail": 15,
+			"sections_audit": 0
+		}
+	]
+}

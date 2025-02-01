@@ -1,0 +1,15 @@
+{
+	"title": "SELECT 5001 results",
+	"input": {
+		"WHERE": {
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections-5001_avg"
+			],
+			"ORDER": "sections-5001_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "ResultTooLargeError"
+}
