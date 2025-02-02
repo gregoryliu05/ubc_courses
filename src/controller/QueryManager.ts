@@ -1,7 +1,6 @@
-import {Query} from "./insightTypes";
+import { Query } from "./insightTypes";
 
 export class QueryManager {
-
 	private query: Query;
 
 	constructor(query: unknown) {
@@ -11,5 +10,4 @@ export class QueryManager {
 	public getQuery(): Query {
 		return this.query;
 	}
-
 }

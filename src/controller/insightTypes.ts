@@ -21,15 +21,15 @@ export type MKey = `${string}_${MField}`;
 export type SKey = `${string}_${SField}`;
 export type Key = MKey | SKey;
 
-export interface LogicComparison {
+export type LogicComparison = {
 	[key in LogicOperator]?: Filter[];
-}
+};
 
-export interface MComparison {
+export type MComparison = {
 	[key in MComparator]?: {
 		[key: MKey]: number;
 	};
-}
+};
 
 export interface SComparison {
 	IS: {
