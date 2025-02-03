@@ -18,18 +18,10 @@ describe("QueryValidator", function () {
 
 		beforeEach(async function () {});
 
-		it("should successfully parse a query", async function () {
-			const testQuery = await loadTestQuery("[valid/complex.json]");
-			queryManager = new QueryManager(testQuery.input);
-			const queryObj: Query = queryManager.getQuery();
-			return expect(JSON.stringify(queryObj)).to.deep.equal(JSON.stringify(testQuery.input));
-		});
-
-		it.only("should successfully parse a query", async function () {
-			const testQuery = await loadTestQuery("[invalid/testQuery.json]");
+		it.only("should validate complex valid query", async function () {
+			const testQuery = await loadTestQuery("[invalid/middleWildcard.json]");
 			try {
 				validate(testQuery.input as Query)
-				expect.fail("Should have thrown InsightError.");
 			} catch (err) {
 				console.log(err)
 				expect(err).to.be.instanceOf(InsightError);

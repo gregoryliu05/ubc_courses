@@ -8,7 +8,7 @@ import {
 	Negation,
 	Query,
 	SComparison,
-	Options, Key
+	Options, Key, SKey
 } from "./insightTypes";
 import {InsightError} from "./IInsightFacade";
 
@@ -77,16 +77,13 @@ function validateID(id: string): void {
 }
 
 function validateInputString(s: string): void {
-
 	const pattern = new RegExp("^\\*?[^*]+\\*?$");
-
 	if (!pattern.test(s)) {
 		throw new InsightError(`Invalid inputstring: ${s}`);
 	}
-
-	if (str.length > 2) {
-		if (str.substring(1, s.length - 1).includes("*")) {
-			throw new InsightError(`Invalid wildcard placement in: ${s}`);
+	if (s.length > 2) {
+		if (s.substring(1, s.length).includes("*")) {
+			throw new InsightError(`Invalid wildcard in: ${s}`);
 		}
 	}
 }
@@ -124,7 +121,7 @@ function validateMComparison(mcomparison: MComparison): void {
 	if (typeof value !== "number") {
 		throw new InsightError("MComparison value must be a number");
 	}
-	validateMKey(mkey);
+	validateMKey(mkey as MKey);
 }
 
 function validateMKey(mkey: MKey): void {
@@ -133,7 +130,8 @@ function validateMKey(mkey: MKey): void {
 		throw new InsightError("MKey is not in the correct format");
 	}
 	validateID(parts[0]);
-	if(!MField.includes(parts[1] as string)) {
+	const validMFields: string[] = ["avg", "pass", "fail", "audit", "year"];
+	if(!validMFields.includes(parts[1] as string)) {
 		throw new InsightError(`${parts[1]} is not a valid mfield type`);
 	}
 }
@@ -150,27 +148,28 @@ function validateSComparison(scomparison: SComparison): void {
 		throw new InsightError("SComparison must only contain a single string value to compare");
 	}
 
-	const skey = Object.keys(value)[0];
-	validateSKey(skey);
+	const skey = Object.keys(values[0])[0];
+	validateSKey(skey as SKey);
 
-	const value = values[0];
-	validateInputString(value);
+	const value = Object.values(values[0])[0];
+	validateInputString(value as string);
 
 }
 
-function validateSKey(skey: SKey, value: any): void {
+function validateSKey(skey: SKey): void {
 	const parts = skey.split("_");
 	if (parts.length !== 2) {
 		throw new InsightError("SKey is not in the correct format");
 	}
 	validateID(parts[0]);
-	if(!SField.includes(parts[1] as string)) {
+	const validSFields: string[] = ["dept", "id", "instructor", "title", "uuid"];
+	if(!validSFields.includes(parts[1] as string)) {
 		throw new InsightError(`${parts[1]} is not a valid sfield type`);
 	}
 }
 
 function validateNegation(negation: Negation): void {
-	return validateFILTER(negation.NOT);
+	return validateFilter(negation.NOT);
 }
 
 const filterValidators: Record<string, (f: any) => void> = {
@@ -233,14 +232,16 @@ function validateColumns(columns: Key[]):void {
 			throw new InsightError("Column key is not in the correct format");
 		}
 		validateID(parts[0]);
-		if(!SField.includes(parts[1] as string) && !MField.includes(parts[1] as string)) {
+		const validMFields: string[] = ["avg", "pass", "fail", "audit", "year"];
+		const validSFields: string[] = ["dept", "id", "instructor", "title", "uuid"];
+		if(!validSFields.includes(parts[1] as string) && !validMFields.includes(parts[1] as string)) {
 			throw new InsightError(`${parts[1]} is not a valid sfield or mfield type`);
 		}
 	}
 }
 
 function validateOrder(order: Key, columns: Key[]):void {
-	if (!columns.includes(options.ORDER)) {
+	if (!columns.includes(order)) {
 		throw new InsightError("Order key must be in COLUMNS key list");
 	}
 }
