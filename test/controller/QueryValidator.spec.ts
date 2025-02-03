@@ -137,4 +137,23 @@ describe("QueryValidator", function () {
 			}
 		});
 	});
+
+	describe("test validateOrder", function () {
+		before(async function () {});
+
+		beforeEach(function () {
+			ids = [];
+		});
+
+		it("should reject order not in COLUMNS", async function () {
+			const testQuery = await loadTestQuery("[invalid/orderNotInColumn.json]");
+			try {
+				validate(testQuery.input as Query, ids);
+				expect.fail("Should have thrown InsightError.");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+				expect(err).to.have.property("message", "Order key must be in COLUMNS key list");
+			}
+		});
+	});
 });
