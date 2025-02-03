@@ -47,6 +47,11 @@ export interface QueryBody {
 	WHERE: Filter | {};
 }
 
+export type Options = {
+	COLUMNS: Key[];
+	ORDER?: Key;
+}
+
 export interface QueryOptions {
 	OPTIONS: {
 		COLUMNS: Key[];
