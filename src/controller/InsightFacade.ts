@@ -1,4 +1,5 @@
 import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } from "./IInsightFacade";
+import { QueryManager } from "./QueryManager";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -19,8 +20,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		const queryManager = new QueryManager(query);
+		return queryManager.performQuery();
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
