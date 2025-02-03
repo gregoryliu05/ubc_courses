@@ -59,6 +59,33 @@ describe("InsightFacade", function () {
 			facade = new InsightFacade();
 		});
 
+		it("should reject with empty dataset", async function () {
+			try {
+				await facade.addDataset("a", noCourses, InsightDatasetKind.Sections);
+				expect.fail("Should have thrown InsightError.");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it("should reject dataset with invalid JSON format", async function () {
+			try {
+				await facade.addDataset("a", invalidJSON, InsightDatasetKind.Sections);
+				expect.fail("Should have thrown InsightError.");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it("should reject dataset with invalid folder structure", async function () {
+			try {
+				await facade.addDataset("a", invalidFolderStructure, InsightDatasetKind.Sections);
+				expect.fail("Should have thrown InsightError.");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
 		it("should successfully add a dataset", async function () {
 			const result = await facade.addDataset("ubc", cpsc310, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["ubc"]);
@@ -117,15 +144,6 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		it("should reject with empty dataset", async function () {
-			try {
-				await facade.addDataset("a", noCourses, InsightDatasetKind.Sections);
-				expect.fail("Should have thrown InsightError.");
-			} catch (err) {
-				expect(err).to.be.instanceOf(InsightError);
-			}
-		});
-
 		it("should reject dataset with course but no sections", async function () {
 			try {
 				await facade.addDataset("a", noSections, InsightDatasetKind.Sections);
@@ -147,24 +165,6 @@ describe("InsightFacade", function () {
 		it("should successfully add a dataset with invalid sections and valid sections", async function () {
 			const result = await facade.addDataset("a", validSections, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["a"]);
-		});
-
-		it("should reject dataset with invalid folder structure", async function () {
-			try {
-				await facade.addDataset("a", invalidFolderStructure, InsightDatasetKind.Sections);
-				expect.fail("Should have thrown InsightError.");
-			} catch (err) {
-				expect(err).to.be.instanceOf(InsightError);
-			}
-		});
-
-		it("should reject dataset with invalid JSON format", async function () {
-			try {
-				await facade.addDataset("a", invalidJSON, InsightDatasetKind.Sections);
-				expect.fail("Should have thrown InsightError.");
-			} catch (err) {
-				expect(err).to.be.instanceOf(InsightError);
-			}
 		});
 
 		it("should reject dataset with invalid kind", async function () {

@@ -36,8 +36,7 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			return await InsightFacade.jszip.loadAsync(content, { base64: true });
 		} catch (err) {
-			//console.log(err);
-			throw new InsightError("invalid content structure");
+			throw new InsightError(err instanceof Error ? err.message : String(err));
 		}
 	}
 
@@ -50,30 +49,29 @@ export default class InsightFacade implements IInsightFacade {
 		);
 
 		for (const course of courseInfos) {
-			JSON.parse(course).result.forEach((courseInfo: CourseInfo) => {
-				const section: Section = {
-					uuid: courseInfo.id.toString(),
-					id: id,
-					title: courseInfo.Title,
-					instructor: courseInfo.Professor,
-					dept: courseInfo.Subject,
-					year: courseInfo.Section === "overall" ? defaultYear : parseInt(courseInfo.Year),
-					avg: courseInfo.Avg,
-					pass: courseInfo.Pass,
-					fail: courseInfo.Fail,
-					audit: courseInfo.Audit,
-				};
-				let check: Boolean = true;
-				for (const col in section) {
-					if (col === undefined || col === null) {
-						check = false;
-						break
+			try {
+				JSON.parse(course).result.forEach((courseInfo: CourseInfo) => {
+					const section: Section = {
+						uuid: courseInfo.id.toString(),
+						id: id,
+						title: courseInfo.Title,
+						instructor: courseInfo.Professor,
+						dept: courseInfo.Subject,
+						year: courseInfo.Section === "overall" ? defaultYear : parseInt(courseInfo.Year),
+						avg: courseInfo.Avg,
+						pass: courseInfo.Pass,
+						fail: courseInfo.Fail,
+						audit: courseInfo.Audit,
+					};
+
+					const check: Boolean = Object.values(section).every((val) => val !== null && val !== undefined);
+					if (check) {
+						sections.push(section);
 					}
-				}
-				if (check) {
-					sections.push(section);
-				}
-			});
+				});
+			} catch (err) {
+				throw new InsightError(err instanceof Error ? err.message : String(err));
+			}
 		}
 		return sections;
 	}
@@ -92,20 +90,20 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("invalid id");
 		}
 
-		// If id is the same as the id of an already added dataset, the dataset should be rejected and not saved.
-
 		const data: JSZip = await InsightFacade.readFile(content);
 		if (!data) {
 			throw new InsightError("empty dataset");
 		}
 
 		const courses: JSZipObject[] = InsightFacade.getValidCourses(data);
-
+		console.log(courses);
+		console.log(courses.length);
 		if (courses.length === 0) {
 			throw new InsightError("invalid file structure");
 		}
 
 		const sections: Section[] = await InsightFacade.getValidSections(courses, id);
+
 		if (sections.length === 0) {
 			throw new InsightError("invalid file structure");
 		}
