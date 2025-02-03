@@ -2,6 +2,7 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { QueryManager } from "../../src/controller/QueryManager";
 import { Query } from "../../src/controller/insightTypes";
+import { InsightError} from "../../src/controller/IInsightFacade";
 
 use(chaiAsPromised);
 
@@ -70,18 +71,19 @@ describe("QueryManager", function () {
 			};
 			queryManager = new QueryManager(query);
 			const queryObj: Query = queryManager.getQuery();
-			return expect(queryObj.OPTIONS.COLUMNS).to.have.members([
-				"sections_uuid",
-				"sections_id",
-				"sections_title",
-				"sections_instructor",
-				"sections_dept",
-				"sections_year",
-				"sections_avg",
-				"sections_pass",
-				"sections_fail",
-				"sections_audit",
-			]);
+			return expect(JSON.stringify(queryObj)).to.deep.equal(JSON.stringify(query));
+		});
+
+		it("should reject invalid JSON query", async function () {
+			const query = "abc";
+			queryManager = new QueryManager(query);
+			try {
+				await queryManager.performQuery();
+				expect.fail("Should have thrown InsightError.");
+			} catch (e) {
+				console.log(e)
+				expect(e).to.be.instanceOf(InsightError);
+			}
 		});
 	});
 });
