@@ -2,7 +2,7 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { QueryManager } from "../../src/controller/QueryManager";
 import { Query } from "../../src/controller/insightTypes";
-import { InsightError} from "../../src/controller/IInsightFacade";
+import { InsightError } from "../../src/controller/IInsightFacade";
 
 use(chaiAsPromised);
 
@@ -81,7 +81,6 @@ describe("QueryManager", function () {
 				await queryManager.performQuery();
 				expect.fail("Should have thrown InsightError.");
 			} catch (e) {
-				console.log(e)
 				expect(e).to.be.instanceOf(InsightError);
 			}
 		});

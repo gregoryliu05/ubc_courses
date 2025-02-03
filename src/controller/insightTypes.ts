@@ -50,7 +50,7 @@ export interface QueryBody {
 export type Options = {
 	COLUMNS: Key[];
 	ORDER?: Key;
-}
+};
 
 export interface QueryOptions {
 	OPTIONS: {
