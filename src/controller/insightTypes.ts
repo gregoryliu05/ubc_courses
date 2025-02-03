@@ -1,3 +1,5 @@
+import { InsightDatasetKind } from "./IInsightFacade";
+
 export interface Section {
 	uuid: string;
 	id: string;
@@ -48,4 +50,10 @@ export interface CourseInfo {
 	Avg: number;
 	Campus: string;
 	Subject: string;
+}
+
+export interface Dataset {
+	id: string;
+	kind: InsightDatasetKind;
+	data: Section[];
 }

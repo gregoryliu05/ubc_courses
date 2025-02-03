@@ -1,57 +1,73 @@
-import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } from "./IInsightFacade";
+import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult } from "./IInsightFacade";
 import JSZip, { JSZipObject } from "jszip";
-import { CourseInfo, Section } from "./insightTypes";
-require("jszip");
+import { CourseInfo, Dataset, Section } from "./insightTypes";
+import fs from "fs-extra";
 
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
  *
  */
+const dataFile = "data/datasets.json";
 export default class InsightFacade implements IInsightFacade {
-	// method for loading the dataset
-	// method for validating the data within the dataset and adding it to the json
-	// i need to get the current data
-	// then add all the current sections
-	private jszip = new JSZip();
+	private static jszip = new JSZip();
 
-	private getValidCourses(data: JSZip): JSZipObject[] {
-		let courses: JSZipObject[] = [];
+	private static async loadDataset(path: string): Promise<Dataset[]> {
+		try {
+			return await fs.readJson(path);
+		} catch (err) {
+			//console.log(err);
+			return [];
+		}
+	}
+
+	private static getValidCourses(data: JSZip): JSZipObject[] {
+		const minLength = 8;
+		const courses: JSZipObject[] = [];
 		Object.entries(data.files).forEach(([name, object]) => {
-			if (name.includes("courses/") && !name.includes("__MACOSX") && name.length > 8) {
+			if (name.includes("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
 				courses.push(object);
 			}
 		});
 		return courses;
 	}
 
-	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// TODO: do validation, like to check if the id is valid or kind is valid or content is valid
-		// TODO: learn how to parse the data
-		// TODO: then write the tests
-		const data = await this.jszip.loadAsync(content, { base64: true });
-		let courses: JSZipObject[] = this.getValidCourses(data);
-		let sections: Section[] = [];
+	private static async readFile(content: string): Promise<JSZip> {
+		try {
+			return await InsightFacade.jszip.loadAsync(content, { base64: true });
+		} catch (err) {
+			//console.log(err);
+			throw new InsightError("invalid content structure");
+		}
+	}
 
-		for (const course of courses) {
-			const info = await course.async("text");
-			JSON.parse(info).result.forEach((data: CourseInfo) => {
+	private static async getValidSections(courses: JSZipObject[], id: string): Promise<Section[]> {
+		const sections: Section[] = [];
+		const defaultYear = 1900;
+
+		const courseInfos: string[] = await Promise.all(
+			courses.map(async (course: JSZipObject): Promise<string> => course.async("text"))
+		);
+
+		for (const course of courseInfos) {
+			JSON.parse(course).result.forEach((courseInfo: CourseInfo) => {
 				const section: Section = {
-					uuid: `${data.id}`,
+					uuid: courseInfo.id.toString(),
 					id: id,
-					title: data.Title,
-					instructor: data.Professor,
-					dept: data.Subject,
-					year: data.Section === "overall" ? 1900 : parseInt(data.Year),
-					avg: data.Avg,
-					pass: data.Pass,
-					fail: data.Fail,
-					audit: data.Audit,
+					title: courseInfo.Title,
+					instructor: courseInfo.Professor,
+					dept: courseInfo.Subject,
+					year: courseInfo.Section === "overall" ? defaultYear : parseInt(courseInfo.Year),
+					avg: courseInfo.Avg,
+					pass: courseInfo.Pass,
+					fail: courseInfo.Fail,
+					audit: courseInfo.Audit,
 				};
 				let check: Boolean = true;
-				for (const data in section) {
-					if (!data) {
+				for (const col in section) {
+					if (col === undefined || col === null) {
 						check = false;
+						break
 					}
 				}
 				if (check) {
@@ -59,11 +75,44 @@ export default class InsightFacade implements IInsightFacade {
 				}
 			});
 		}
-		console.log(sections);
+		return sections;
+	}
 
-		throw new Error(
-			`InsightFacadeImpl::addDataset() is unimplemented! - id=${id}; content=${content?.length}; kind=${kind}`
-		);
+	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+		// TODO: learn how to parse the data
+		// TODO: then write the tests
+		if (kind !== InsightDatasetKind.Sections) {
+			throw new InsightError("invalid kind");
+		}
+
+		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
+		//console.log(datasets);
+
+		if (datasets.some((dataset) => dataset.id === id) || id.trim() === "" || id.includes("_")) {
+			throw new InsightError("invalid id");
+		}
+
+		// If id is the same as the id of an already added dataset, the dataset should be rejected and not saved.
+
+		const data: JSZip = await InsightFacade.readFile(content);
+		if (!data) {
+			throw new InsightError("empty dataset");
+		}
+
+		const courses: JSZipObject[] = InsightFacade.getValidCourses(data);
+
+		if (courses.length === 0) {
+			throw new InsightError("invalid file structure");
+		}
+
+		const sections: Section[] = await InsightFacade.getValidSections(courses, id);
+		if (sections.length === 0) {
+			throw new InsightError("invalid file structure");
+		}
+		datasets.push({ id: id, kind: kind, data: sections });
+
+		await fs.outputJSON(dataFile, datasets);
+		return datasets.map((dataset) => dataset.id);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
