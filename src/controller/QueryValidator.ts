@@ -12,7 +12,7 @@ import {
 } from "./insightTypes";
 import { InsightError } from "./IInsightFacade";
 
-export function validate(query: Query, ids: string[]): boolean {
+export function validate(query: Query, ids: string[]): void {
 	// Valid JSON Object
 	if (typeof query !== "object" || query === null || Array.isArray(query)) {
 		throw new InsightError("Query must be a valid JSON object");
@@ -57,7 +57,6 @@ export function validate(query: Query, ids: string[]): boolean {
 	if (new Set(ids).size > 1) {
 		throw new InsightError("Only 1 dataset can be referenced in the query");
 	}
-	return true;
 }
 
 // WHERE VALIDATION
