@@ -56,4 +56,5 @@ export interface Dataset {
 	id: string;
 	kind: InsightDatasetKind;
 	data: Section[];
+	numRows: number;
 }
