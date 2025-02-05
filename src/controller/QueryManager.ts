@@ -2,11 +2,12 @@ import { Query } from "./insightTypes";
 import { InsightError, InsightResult } from "./IInsightFacade";
 import { validate } from "./QueryValidator";
 import fs from "fs-extra";
+import {applyFilter} from "./QueryExecutor";
 
 export class QueryManager {
 	private query: Query;
 	private ids: string[];
-	const dataFile = "data/datasets.json";
+	private dataFile = "data/datasets.json";
 
 
 	constructor(query: unknown) {
@@ -29,12 +30,23 @@ export class QueryManager {
 		}
 		const dataset = await this.getDataset(ids[0]);
 
-		return Promise.resolve([]);
+		const filter = this.query.WHERE;
+
+		let result: InsightResult = [];
+
+		if (Object.keys(filter).length === 0) {
+			result = dataset;
+		} else {
+			for (const section of dataset) {
+				if (applyFilter(section as Section, filter as Filter)) {
+					result.push(section);
+				}
+			}
+		}
+
+		return Promise.resolve(result);
 	}
 
-	private filterData(dataset: InsightResult[]): InsightResult[] {
-
-	}
 	private async getDataset(id: string): Promise<InsightResult[]> {
 		try {
 			const datasets: InsightResult[] = await fs.readJson(this.dataFile);
