@@ -51,16 +51,15 @@ describe("DatasetProcessor", function () {
 					return JSON.stringify({
 						result: [
 							{
-								id: 12345,
-								Title: "Software Engineering",
-								Professor: "John Doe",
-								Subject: "CPSC",
-								Section: "101",
-								Year: "2022",
-								Avg: 80,
-								Pass: 150,
+								id: 11111,
+								Title: "software engineering",
+								Professor: "me",
+								Subject: "cpsc",
+								Year: "2024",
+								Avg: 99,
+								Pass: 10,
 								Fail: 10,
-								Audit: 5,
+								Audit: 50,
 							},
 						],
 					});
@@ -82,16 +81,16 @@ describe("DatasetProcessor", function () {
 			try {
 				const sections = await (InsightFacade as any).getValidSections([mockJSZipObject], "cpsc310");
 				expect(sections[0]).to.deep.equal({
-					uuid: "12345",
+					uuid: "11111",
 					id: "cpsc310",
-					title: "Software Engineering",
-					instructor: "John Doe",
-					dept: "CPSC",
-					year: 2022,
-					avg: 80,
-					pass: 150,
+					title: "software engineering",
+					instructor: "me",
+					dept: "cpsc",
+					year: 2024,
+					avg: 99,
+					pass: 10,
 					fail: 10,
-					audit: 5,
+					audit: 50,
 				});
 			} catch {
 				expect.fail("should not return error");
