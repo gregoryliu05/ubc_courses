@@ -9,6 +9,7 @@ import {
 import JSZip, { JSZipObject } from "jszip";
 import { CourseInfo, Dataset, Section } from "./insightTypes";
 import fs from "fs-extra";
+import { QueryManager } from "./QueryManager";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -58,7 +59,7 @@ export default class InsightFacade implements IInsightFacade {
 				JSON.parse(course).result.forEach((courseInfo: CourseInfo) => {
 					const section: Section = {
 						uuid: courseInfo.id.toString(),
-						id: id,
+						id: courseInfo.Course,
 						title: courseInfo.Title,
 						instructor: courseInfo.Professor,
 						dept: courseInfo.Subject,
@@ -106,7 +107,6 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		datasets.push({ id: id, kind: kind, data: sections, numRows: sections.length });
-
 		await fs.outputJSON(dataFile, datasets);
 		return datasets.map((dataset) => dataset.id);
 	}
@@ -131,8 +131,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		const queryManager = new QueryManager(query);
+		return queryManager.performQuery();
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {

@@ -1,15 +1,14 @@
 {
-	"title": "Multiple datasets in OPTIONS",
+	"title": "",
 	"input": {
 		"WHERE": {
-			"GT": {
-				"sections_avg": 97
+			"IS": {
+				"sections_dept": "**"
 			}
 		},
 		"OPTIONS": {
 			"COLUMNS": [
-				"sections_dept",
-				"sections-5000_avg"
+				"sections_dept"
 			],
 			"ORDER": "sections_dept"
 		}
