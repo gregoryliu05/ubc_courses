@@ -10,11 +10,15 @@ use(chaiAsPromised);
 describe("DatasetProcessor", function () {
 	let cpsc310: string;
 	let noCourses: string;
+	let validSections: string;
+	let invalidCoursePath: string;
 
 	before(async function () {
 		await clearDisk();
 		cpsc310 = await getContentFromArchives("cpsc310.zip");
 		noCourses = await getContentFromArchives("empty.zip");
+		validSections = await getContentFromArchives("validSections.zip");
+		invalidCoursePath = await getContentFromArchives("lolcourses.zip");
 	});
 
 	describe("loadDataset", function () {
@@ -37,10 +41,22 @@ describe("DatasetProcessor", function () {
 			expect(courses).to.deep.eq([]);
 		});
 		// test for returning one or more courses
-		it("should return no courses", async function () {
+		it("should return 1 course", async function () {
 			const file: JSZip = await (InsightFacade as any).readFile(cpsc310);
 			const courses = (InsightFacade as any).getValidCourses(file);
 			expect(courses.length).to.eq(1);
+		});
+
+		it("should return 1 course", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(validSections);
+			const courses: any = (InsightFacade as any).getValidCourses(file);
+			expect(courses.length).to.eq(1);
+		});
+
+		it("should return no courses", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(invalidCoursePath);
+			const courses: any = (InsightFacade as any).getValidCourses(file);
+			expect(courses.length).to.eq(0);
 		});
 	});
 
@@ -53,6 +69,7 @@ describe("DatasetProcessor", function () {
 							{
 								id: 11111,
 								Title: "software engineering",
+								Course: "310",
 								Professor: "me",
 								Subject: "cpsc",
 								Year: "2024",
@@ -82,7 +99,7 @@ describe("DatasetProcessor", function () {
 				const sections = await (InsightFacade as any).getValidSections([mockJSZipObject], "cpsc310");
 				expect(sections[0]).to.deep.equal({
 					uuid: "11111",
-					id: "cpsc310",
+					id: "310",
 					title: "software engineering",
 					instructor: "me",
 					dept: "cpsc",

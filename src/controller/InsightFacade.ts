@@ -30,7 +30,7 @@ export default class InsightFacade implements IInsightFacade {
 		const minLength = 8;
 		const courses: JSZipObject[] = [];
 		Object.entries(data.files).forEach(([name, object]) => {
-			if (name.includes("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
+			if (name.startsWith("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
 				courses.push(object);
 			}
 		});
@@ -46,7 +46,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 
-	private static async getValidSections(courses: JSZipObject[], id: string): Promise<Section[]> {
+	private static async getValidSections(courses: JSZipObject[]): Promise<Section[]> {
 		const sections: Section[] = [];
 		const defaultYear = 1900;
 
@@ -69,7 +69,6 @@ export default class InsightFacade implements IInsightFacade {
 						fail: courseInfo.Fail,
 						audit: courseInfo.Audit,
 					};
-
 					const check: Boolean = Object.values(section).every((val) => val !== null && val !== undefined);
 					if (check) {
 						sections.push(section);
@@ -100,7 +99,7 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("no valid courses");
 		}
 
-		const sections: Section[] = await InsightFacade.getValidSections(courses, id);
+		const sections: Section[] = await InsightFacade.getValidSections(courses);
 
 		if (sections.length === 0) {
 			throw new InsightError("no valid sections");
