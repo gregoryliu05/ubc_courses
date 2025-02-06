@@ -1,14 +1,14 @@
-import { Query } from "./insightTypes";
-import { InsightError, InsightResult } from "./IInsightFacade";
+import { Dataset, Filter, Query, Section } from "./insightTypes";
+import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 import { validate } from "./QueryValidator";
 import fs from "fs-extra";
-import {applyFilter} from "./QueryExecutor";
+import { applyFilter, filterColumns, sortResult } from "./QueryExecutor";
 
+const maxResults: number = 5000;
+const dataFile = "data/datasets.json";
 export class QueryManager {
 	private query: Query;
 	private ids: string[];
-	private dataFile = "data/datasets.json";
-
 
 	constructor(query: unknown) {
 		this.query = query as Query;
@@ -28,20 +28,29 @@ export class QueryManager {
 			}
 			throw new InsightError("An unexpected error occurred while validating the query");
 		}
-		const dataset = await this.getDataset(ids[0]);
+		const dataset = await this.getDataset(this.ids[0]);
 
 		const filter = this.query.WHERE;
-
-		let result: InsightResult = [];
+		let result: InsightResult[] = [];
 
 		if (Object.keys(filter).length === 0) {
 			result = dataset;
 		} else {
 			for (const section of dataset) {
-				if (applyFilter(section as Section, filter as Filter)) {
+				if (applyFilter(section as unknown as Section, filter as Filter)) {
 					result.push(section);
 				}
 			}
+		}
+
+		if (result.length > maxResults) {
+			return Promise.reject(new ResultTooLargeError("Over 5000 results found"));
+		}
+
+		filterColumns(result, this.query.OPTIONS.COLUMNS as string[]);
+
+		if (this.query.OPTIONS.ORDER) {
+			sortResult(result, this.query.OPTIONS.ORDER);
 		}
 
 		return Promise.resolve(result);
@@ -49,15 +58,19 @@ export class QueryManager {
 
 	private async getDataset(id: string): Promise<InsightResult[]> {
 		try {
-			const datasets: InsightResult[] = await fs.readJson(this.dataFile);
+			const datasets: Dataset[] = await fs.readJson(dataFile);
 			for (const dataset of datasets) {
 				if (dataset.id === id) {
-					return dataset.data as InsightResult[];
+					return dataset.data as unknown as InsightResult[];
 				}
 			}
 			throw new InsightError(`Could not find dataset with id: ${id}`);
-		} catch {
-			throw new InsightError(`Error reading data`);
+		} catch (e) {
+			if (e instanceof InsightError) {
+				throw e;
+			} else {
+				throw new InsightError("Error reading data");
+			}
 		}
 	}
 }

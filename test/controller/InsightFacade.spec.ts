@@ -324,20 +324,18 @@ describe("InsightFacade", function () {
 		}
 
 		before(async function () {
+			await clearDisk();
+
 			facade = new InsightFacade();
 			sections = await getContentFromArchives("pair.zip");
 			sections5000 = await getContentFromArchives("5000.zip");
 			sections5001 = await getContentFromArchives("5001.zip");
 			// Add the datasets to InsightFacade once.
 			// Will *fail* if there is a problem reading ANY dataset.
-			const loadDatasetPromises: Promise<string[]>[] = [
-				facade.addDataset("sections", sections, InsightDatasetKind.Sections),
-				facade.addDataset("sections-5000", sections5000, InsightDatasetKind.Sections),
-				facade.addDataset("sections-5001", sections5001, InsightDatasetKind.Sections),
-			];
-
 			try {
-				await Promise.all(loadDatasetPromises);
+				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("sections-5001", sections5001, InsightDatasetKind.Sections);
+				await facade.addDataset("sections-5000", sections5000, InsightDatasetKind.Sections);
 			} catch (err) {
 				throw new Error(`In PerformQuery Before hook, dataset(s) failed to be added. \n${err}`);
 			}
