@@ -30,7 +30,7 @@ export default class InsightFacade implements IInsightFacade {
 		const minLength = 8;
 		const courses: JSZipObject[] = [];
 		Object.entries(data.files).forEach(([name, object]) => {
-			if (name.includes("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
+			if (name.startsWith("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
 				courses.push(object);
 			}
 		});
