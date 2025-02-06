@@ -53,6 +53,7 @@ describe("DatasetProcessor", function () {
 							{
 								id: 11111,
 								Title: "software engineering",
+								Course: "310",
 								Professor: "me",
 								Subject: "cpsc",
 								Year: "2024",
@@ -82,7 +83,7 @@ describe("DatasetProcessor", function () {
 				const sections = await (InsightFacade as any).getValidSections([mockJSZipObject], "cpsc310");
 				expect(sections[0]).to.deep.equal({
 					uuid: "11111",
-					id: "cpsc310",
+					id: "310",
 					title: "software engineering",
 					instructor: "me",
 					dept: "cpsc",
