@@ -39,18 +39,6 @@ export function validate(query: Query, ids: string[]): void {
 		throw new InsightError("Could not validate the OPTIONS clause");
 	}
 
-	// Single DATASET referenced in WHERE
-
-	// Single DATASET referenced in COLUMNS
-
-	// Wildcard valid
-
-	// Order key is in COLUMNS key list
-
-	// Dataset exists
-
-	// Number of results <= 5000
-
 	if (ids.length < 1) {
 		throw new InsightError("No datasets referenced in given query");
 	}
