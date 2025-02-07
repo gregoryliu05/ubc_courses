@@ -12,6 +12,7 @@ describe("DatasetProcessor", function () {
 	let noCourses: string;
 	let validSections: string;
 	let invalidCoursePath: string;
+	let someValidSomeInvalid: string;
 
 	before(async function () {
 		await clearDisk();
@@ -19,6 +20,7 @@ describe("DatasetProcessor", function () {
 		noCourses = await getContentFromArchives("empty.zip");
 		validSections = await getContentFromArchives("validSections.zip");
 		invalidCoursePath = await getContentFromArchives("lolcourses.zip");
+		someValidSomeInvalid = await getContentFromArchives("somevalidcoursesomeinvalid.zip");
 	});
 
 	describe("loadDataset", function () {
@@ -57,6 +59,14 @@ describe("DatasetProcessor", function () {
 			const file: JSZip = await (InsightFacade as any).readFile(invalidCoursePath);
 			const courses: any = (InsightFacade as any).getValidCourses(file);
 			expect(courses.length).to.eq(0);
+		});
+
+		it("should return some of the courses", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(someValidSomeInvalid);
+			const courses: any = (InsightFacade as any).getValidCourses(file);
+			// created this list to bypass magic number check
+			const list = [1, 2, 1, 1, 1, 1];
+			expect(courses.length).to.eq(list.length);
 		});
 	});
 

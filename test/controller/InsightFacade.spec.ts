@@ -163,7 +163,7 @@ describe("InsightFacade", function () {
 		});
 
 		it("should successfully add a dataset with invalid sections and valid sections", async function () {
-			const result = await facade.addDataset("a", validSections, InsightDatasetKind.Sections);
+			const result = await facade.addDataset("a ", validSections, InsightDatasetKind.Sections);
 			expect(result).to.have.members(["a"]);
 		});
 

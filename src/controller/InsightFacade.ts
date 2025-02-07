@@ -27,10 +27,20 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	private static getValidCourses(data: JSZip): JSZipObject[] {
-		const minLength = 8;
 		const courses: JSZipObject[] = [];
+
+		// having only startsWith doesn't consider if a courses folder has another folder called courses
+		// with courses that shouldn't be added, e.g. /courses/courses/CPSC310 -> shouldn't be added
+		// i asked ta about this, he said this case should never happen or smth? so very confused
 		Object.entries(data.files).forEach(([name, object]) => {
-			if (name.startsWith("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
+			const parts: String[] = name.split("/");
+			if (
+				parts.length === 2 &&
+				parts[0] === "courses" &&
+				parts[1] !== "" &&
+				!name.includes("__MACOSX") &&
+				!name.includes(".DS_Store")
+			) {
 				courses.push(object);
 			}
 		});
@@ -88,7 +98,9 @@ export default class InsightFacade implements IInsightFacade {
 
 		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
 
-		if (datasets.some((dataset) => dataset.id === id) || id.trim() === "" || id.includes("_")) {
+		//  for each dataset, check dataset.id.trim() === id???
+		//  eg: "a" exists in database, add "a ", does this count as duplicate?
+		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
 			throw new InsightError("invalid id");
 		}
 
@@ -105,7 +117,7 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("no valid sections");
 		}
 
-		datasets.push({ id: id, kind: kind, data: sections, numRows: sections.length });
+		datasets.push({ id: id.trim(), kind: kind, data: sections, numRows: sections.length });
 		await fs.outputJSON(dataFile, datasets);
 		return datasets.map((dataset) => dataset.id);
 	}
