@@ -1,8 +1,8 @@
 import {
 	IInsightFacade,
 	InsightDatasetKind,
-	InsightResult,
 	InsightError,
+	InsightResult,
 	NotFoundError,
 	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
@@ -43,6 +43,7 @@ describe("InsightFacade", function () {
 		let validSections: string;
 		let invalidFolderStructure: string;
 		let invalidJSON: string;
+		let campus: string;
 
 		before(async function () {
 			cpsc310 = await getContentFromArchives("cpsc310.zip");
@@ -52,6 +53,7 @@ describe("InsightFacade", function () {
 			validSections = await getContentFromArchives("validSections.zip");
 			invalidFolderStructure = await getContentFromArchives("invalidFolderStructure.zip");
 			invalidJSON = await getContentFromArchives("invalidJSON.zip");
+			campus = await getContentFromArchives("campus.zip");
 		});
 
 		beforeEach(async function () {
@@ -173,6 +175,14 @@ describe("InsightFacade", function () {
 				expect.fail("Should have thrown InsightError.");
 			} catch (err) {
 				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it("should test out getting rooms", async function () {
+			try {
+				await facade.addDataset("lol", campus, InsightDatasetKind.Rooms);
+			} catch (e) {
+				console.log(e);
 			}
 		});
 	});

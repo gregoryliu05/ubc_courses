@@ -4,12 +4,14 @@ import { clearDisk, getContentFromArchives } from "../TestUtil";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import JSZip, { JSZipObject } from "jszip";
+import SectionsManager from "../../src/controller/SectionsManager";
 
 use(chaiAsPromised);
 
 describe("DatasetProcessor", function () {
 	let cpsc310: string;
 	let noCourses: string;
+	const sectionsManager = new SectionsManager();
 
 	before(async function () {
 		await clearDisk();
@@ -33,13 +35,13 @@ describe("DatasetProcessor", function () {
 		// test for returning no courses
 		it("should return no courses", async function () {
 			const file: JSZip = await (InsightFacade as any).readFile(noCourses);
-			const courses = (InsightFacade as any).getValidCourses(file);
+			const courses = sectionsManager.getValidCourses(file);
 			expect(courses).to.deep.eq([]);
 		});
 		// test for returning one or more courses
 		it("should return no courses", async function () {
 			const file: JSZip = await (InsightFacade as any).readFile(cpsc310);
-			const courses = (InsightFacade as any).getValidCourses(file);
+			const courses = sectionsManager.getValidCourses(file);
 			expect(courses.length).to.eq(1);
 		});
 	});
@@ -52,6 +54,7 @@ describe("DatasetProcessor", function () {
 						result: [
 							{
 								id: 11111,
+								Course: "cpsc310",
 								Title: "software engineering",
 								Professor: "me",
 								Subject: "cpsc",
@@ -79,7 +82,8 @@ describe("DatasetProcessor", function () {
 
 		it("should return the courses", async function () {
 			try {
-				const sections = await (InsightFacade as any).getValidSections([mockJSZipObject], "cpsc310");
+				const sections = await sectionsManager.getValidSections([mockJSZipObject], "cpsc310");
+				console.log(sections);
 				expect(sections[0]).to.deep.equal({
 					uuid: "11111",
 					id: "cpsc310",
@@ -99,7 +103,7 @@ describe("DatasetProcessor", function () {
 		// test for returning an error when supposed to
 		it("should return an error", async function () {
 			try {
-				await (InsightFacade as any).getValidSections([badMockJSZipObject], "object");
+				await sectionsManager.getValidSections([badMockJSZipObject], "object");
 				expect.fail("should have thrown error");
 			} catch (err) {
 				expect(err).to.be.instanceOf(InsightError);

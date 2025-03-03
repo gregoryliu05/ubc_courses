@@ -1,5 +1,28 @@
 import { InsightDatasetKind } from "./IInsightFacade";
 
+export interface Room {
+	fullname: string; //  <td class="views-field views-field-title">
+	shortname: string; // <td class="views-field views-field-field-building-code">
+	number: string; // <td class="views-field views-field-field-room-number">
+	name: string; // shortname + number
+	address: string; // get from views-field views-field-field-building-address
+
+	seats: number // <td class="views-field views-field-field-room-capacity">
+	type: string; //  <td class="views-field views-field-field-room-type">
+	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
+	href: string; // <td class="views-field views-field-nothing">
+	// <a href="http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/ALRD-105">More info</a> </td>
+
+	lat: number; // get this from geolocation api
+	lon: number; // get this from geolocation api
+}
+
+export interface GeoResponse {
+	lat?: number;
+	lon?: number;
+	error?: string;
+}
+
 export interface Section {
 	uuid: string;
 	id: string;
@@ -55,7 +78,7 @@ export interface CourseInfo {
 export interface Dataset {
 	id: string;
 	kind: InsightDatasetKind;
-	data: Section[];
+	data: Section[] | Room[];
 	numRows: number;
 }
 
