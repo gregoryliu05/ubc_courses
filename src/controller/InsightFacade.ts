@@ -41,11 +41,13 @@ export default class InsightFacade implements IInsightFacade {
 		const sectionsManager = new SectionsManager();
 		const roomsManager = new RoomsManager();
 		if (kind !== InsightDatasetKind.Sections && kind !== InsightDatasetKind.Rooms) {
-		 	throw new InsightError("invalid kind");
+			throw new InsightError("invalid kind");
 		}
 		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
 
-		if (datasets.some((dataset) => dataset.id === id) || id.trim() === "" || id.includes("_")) {
+		//  for each dataset, check dataset.id.trim() === id???
+		//  eg: "a" exists in database, add "a ", does this count as duplicate?
+		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
 			throw new InsightError("invalid id");
 		}
 
@@ -55,14 +57,14 @@ export default class InsightFacade implements IInsightFacade {
 		// handle courses/sections
 		let result: Section[] | Room[];
 		if (kind === InsightDatasetKind.Sections) {
-			result = await sectionsManager.processSections(data, id);
+			result = await sectionsManager.processSections(data);
 		}
 		// handle buildings/rooms
 		else {
 			result = await roomsManager.processRooms(data, id);
 		}
 
-		datasets.push({ id: id, kind: kind, data: result, numRows: result.length });
+		datasets.push({ id: id.trim(), kind: kind, data: result, numRows: result.length });
 		await fs.outputJSON(dataFile, datasets);
 		return datasets.map((dataset) => dataset.id);
 	}

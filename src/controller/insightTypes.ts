@@ -7,7 +7,7 @@ export interface Room {
 	name: string; // shortname + number
 	address: string; // get from views-field views-field-field-building-address
 
-	seats: number // <td class="views-field views-field-field-room-capacity">
+	seats: number; // <td class="views-field views-field-field-room-capacity">
 	type: string; //  <td class="views-field views-field-field-room-type">
 	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
 	href: string; // <td class="views-field views-field-nothing">

@@ -4,17 +4,26 @@ import { InsightError } from "./IInsightFacade";
 
 export default class SectionsManager {
 	public getValidCourses(data: JSZip): JSZipObject[] {
-		const minLength = 8;
 		const courses: JSZipObject[] = [];
+		// having only startsWith doesn't consider if a courses folder has another folder called courses
+		// with courses that shouldn't be added, e.g. /courses/courses/CPSC310 -> shouldn't be added
+		// i asked ta about this, he said this case should never happen or smth? so very confused
 		Object.entries(data.files).forEach(([name, object]) => {
-			if (name.includes("courses/") && !name.includes("__MACOSX") && name.length > minLength) {
+			const parts: String[] = name.split("/");
+			if (
+				parts.length === 2 &&
+				parts[0] === "courses" &&
+				parts[1] !== "" &&
+				!name.includes("__MACOSX") &&
+				!name.includes(".DS_Store")
+			) {
 				courses.push(object);
 			}
 		});
 		return courses;
 	}
 
-	public async getValidSections(courses: JSZipObject[], id: string): Promise<Section[]> {
+	public async getValidSections(courses: JSZipObject[]): Promise<Section[]> {
 		const sections: Section[] = [];
 		const defaultYear = 1900;
 
@@ -50,14 +59,14 @@ export default class SectionsManager {
 		return sections;
 	}
 
-	public async processSections(data: JSZip, id: string): Promise<Section[]> {
+	public async processSections(data: JSZip): Promise<Section[]> {
 		const courses: JSZipObject[] = this.getValidCourses(data);
 
 		if (courses.length === 0) {
 			throw new InsightError("no valid courses");
 		}
 
-		const sections: Section[] = await this.getValidSections(courses, id);
+		const sections: Section[] = await this.getValidSections(courses);
 
 		if (sections.length === 0) {
 			throw new InsightError("no valid sections");

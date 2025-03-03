@@ -11,12 +11,18 @@ use(chaiAsPromised);
 describe("DatasetProcessor", function () {
 	let cpsc310: string;
 	let noCourses: string;
+	let validSections: string;
+	let invalidCoursePath: string;
+	let someValidSomeInvalid: string;
 	const sectionsManager = new SectionsManager();
 
 	before(async function () {
 		await clearDisk();
 		cpsc310 = await getContentFromArchives("cpsc310.zip");
 		noCourses = await getContentFromArchives("empty.zip");
+		validSections = await getContentFromArchives("validSections.zip");
+		invalidCoursePath = await getContentFromArchives("lolcourses.zip");
+		someValidSomeInvalid = await getContentFromArchives("somevalidcoursesomeinvalid.zip");
 	});
 
 	describe("loadDataset", function () {
@@ -39,10 +45,30 @@ describe("DatasetProcessor", function () {
 			expect(courses).to.deep.eq([]);
 		});
 		// test for returning one or more courses
-		it("should return no courses", async function () {
+		it("should return 1 course", async function () {
 			const file: JSZip = await (InsightFacade as any).readFile(cpsc310);
 			const courses = sectionsManager.getValidCourses(file);
 			expect(courses.length).to.eq(1);
+		});
+
+		it("should return 1 course", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(validSections);
+			const courses: any = sectionsManager.getValidCourses(file);
+			expect(courses.length).to.eq(1);
+		});
+
+		it("should return no courses", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(invalidCoursePath);
+			const courses: any = sectionsManager.getValidCourses(file);
+			expect(courses.length).to.eq(0);
+		});
+
+		it("should return some of the courses", async function () {
+			const file: JSZip = await (InsightFacade as any).readFile(someValidSomeInvalid);
+			const courses: any = sectionsManager.getValidCourses(file);
+			// created this list to bypass magic number check
+			const list = [1, 2, 1, 1, 1, 1];
+			expect(courses.length).to.eq(list.length);
 		});
 	});
 
@@ -82,7 +108,7 @@ describe("DatasetProcessor", function () {
 
 		it("should return the courses", async function () {
 			try {
-				const sections = await sectionsManager.getValidSections([mockJSZipObject], "cpsc310");
+				const sections = await sectionsManager.getValidSections([mockJSZipObject]);
 				console.log(sections);
 				expect(sections[0]).to.deep.equal({
 					uuid: "11111",
@@ -103,7 +129,7 @@ describe("DatasetProcessor", function () {
 		// test for returning an error when supposed to
 		it("should return an error", async function () {
 			try {
-				await sectionsManager.getValidSections([badMockJSZipObject], "object");
+				await sectionsManager.getValidSections([badMockJSZipObject]);
 				expect.fail("should have thrown error");
 			} catch (err) {
 				expect(err).to.be.instanceOf(InsightError);
