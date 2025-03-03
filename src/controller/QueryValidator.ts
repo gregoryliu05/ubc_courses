@@ -241,34 +241,65 @@ function validateTransformations(transformations: Transformations, ids: string[]
 	validateApply(transformations.APPLY, ids);
 }
 
-function validateGroup(group: Group, ids: string[]): void {
-	if (!Array.isArray(group) || group.length === 0) {
-		throw new InsightError("GROUP must be a non-empty array");
+function validateGroup(group: Key[], ids: string[]): void {
+	// Validate each key in GROUP
+	if (!Array.isArray(group)) {
+		throw new InsightError("GROUP must be an array");
 	}
+
 	for (const key of group) {
-		validateKey(key, ids);
+		const parts = key.split("_");
+		if (parts.length !== 2) {
+			throw new InsightError(`${key} in GROUP is not a valid key format`);
+		}
+		validateID(parts[0], ids);
+
+		// Reuse validateMKey and validateSKey
+		const fieldType = parts[1];
+		const validMFields: string[] = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
+		if (validMFields.includes(fieldType)) {
+			validateMKey(key as MKey, ids);
+		} else {
+			validateSKey(key as SKey, ids);
+		}
 	}
 }
 
-function validateApply(apply: Apply, ids: string[]): void {
-	const applyKeys = new Set();
+function validateApply(apply: ApplyRule[], ids: string[]): void {
+	const applyKeys = new Set<string>();
+
+	if (!Array.isArray(apply)) {
+		throw new InsightError("APPLY must be an array");
+	}
+
 	for (const rule of apply) {
 		const applyKey = Object.keys(rule)[0];
 		if (applyKeys.has(applyKey)) {
-			throw new InsightError(`Duplicate apply key: '${applyKey}'`);
+			throw new InsightError(`Duplicate applykey: ${applyKey}`);
 		}
 		applyKeys.add(applyKey);
-		validateApplyRule(rule[applyKey], ids);
-	}
-}
 
-function validateApplyRule(applyRule: ApplyRule, ids: string[]): void {
-	const { APPLYTOKEN, KEY } = applyRule;
-	validateKey(KEY, ids);
-	const numericTokens = new Set(["MAX", "MIN", "AVG", "SUM"]);
-	if (numericTokens.has(APPLYTOKEN)) {
-		if (!isNumericKey(KEY)) {
-			throw new InsightError(`${APPLYTOKEN} can only be applied to numeric keys`);
+		const applyToken = Object.keys(rule[applyKey])[0] as ApplyToken;
+		const applyKeyType = rule[applyKey][applyToken];
+
+		if (applyToken === "COUNT") {
+			// COUNT can be applied to any Key
+			validateKey(applyKeyType, ids);
+		} else {
+			// MAX, MIN, AVG, SUM should be applied to numeric keys (MKeys)
+			const parts = applyKeyType.split("_");
+			if (parts.length !== 2) {
+				throw new InsightError(`${applyKeyType} in APPLY is not a valid key format`);
+			}
+			validateID(parts[0], ids);
+			const fieldType = parts[1];
+			const validMFields: string[] = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
+			if (validMFields.includes(fieldType)) {
+				// Reuse validateMKey to ensure it's a valid MKey
+				validateMKey(applyKeyType as MKey, ids);
+			} else {
+				throw new InsightError(`${fieldType} is not a valid mfield type for ${applyToken}`);
+			}
 		}
 	}
 }
