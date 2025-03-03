@@ -8,7 +8,7 @@ import {
 	SComparison,
 	Options,
 	Key,
-	SKey,
+	SKey, ApplyRule,
 } from "./insightTypes";
 import { InsightError } from "./IInsightFacade";
 
@@ -17,26 +17,20 @@ export function validate(query: Query, ids: string[]): void {
 	if (typeof query !== "object" || query === null || Array.isArray(query)) {
 		throw new InsightError("Query must be a valid JSON object");
 	}
-
 	// Validate WHERE
 	try {
 		validateWhere(query.WHERE, ids);
-	} catch (e) {
-		if (e instanceof InsightError) {
-			throw e;
+		validateOptions(query.OPTIONS);
+		if(query.TRANSFORMATIONS)  {
+			validateTransformations(query.TRANSFORMATIONS, ids)
+
 		}
-		throw new InsightError("Could not validate the WHERE clause");
 	}
-
-	// Validate OPTIONS
-
-	try {
-		validateOptions(query.OPTIONS, ids);
-	} catch (e) {
+	catch (e) {
 		if (e instanceof InsightError) {
 			throw e;
 		}
-		throw new InsightError("Could not validate the OPTIONS clause");
+		throw new InsightError("Could not validate the Query");
 	}
 
 	if (ids.length < 1) {
@@ -115,7 +109,7 @@ function validateMKey(mkey: MKey, ids: string[]): void {
 		throw new InsightError("MKey is not in the correct format");
 	}
 	validateID(parts[0], ids);
-	const validMFields: string[] = ["avg", "pass", "fail", "audit", "year"];
+	const validMFields: string[] = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
 	if (!validMFields.includes(parts[1] as string)) {
 		throw new InsightError(`${parts[1]} is not a valid mfield type`);
 	}
@@ -146,7 +140,8 @@ function validateSKey(skey: SKey, ids: string[]): void {
 		throw new InsightError("SKey is not in the correct format");
 	}
 	validateID(parts[0], ids);
-	const validSFields: string[] = ["dept", "id", "instructor", "title", "uuid"];
+	const validSFields: string[] = ["dept", "id", "instructor", "title", "uuid", "fullname", "shortname",
+		"number", "name", "address", "type", "furniture", "href"];
 	if (!validSFields.includes(parts[1] as string)) {
 		throw new InsightError(`${parts[1]} is not a valid sfield type`);
 	}
@@ -223,5 +218,57 @@ function validateColumns(columns: Key[], ids: string[]): void {
 function validateOrder(order: Key, columns: Key[]): void {
 	if (!columns.includes(order)) {
 		throw new InsightError("Order key must be in COLUMNS key list");
+	} else if (typeof order === "object") {
+		if (!["UP", "DOWN"].includes(order.dir)) {
+			throw new InsightError("ORDER direction must be UP or DOWN");
+		}
+		for (const key of order.keys) {
+			if (!columns.includes(key)) {
+				throw new InsightError("ORDER key must be in COLUMNS list");
+			}
+		}
+	} else {
+		throw new InsightError("Invalid ORDER format");
+	}
+}
+
+function validateTransformations(transformations: Transformations, ids: string[]): void {
+	if (typeof transformations !== "object" || transformations === null) {
+		throw new InsightError("TRANSFORMATIONS must be an object");
+	}
+
+	validateGroup(transformations.GROUP, ids);
+	validateApply(transformations.APPLY, ids);
+}
+
+function validateGroup(group: Group, ids: string[]): void {
+	if (!Array.isArray(group) || group.length === 0) {
+		throw new InsightError("GROUP must be a non-empty array");
+	}
+	for (const key of group) {
+		validateKey(key, ids);
+	}
+}
+
+function validateApply(apply: Apply, ids: string[]): void {
+	const applyKeys = new Set();
+	for (const rule of apply) {
+		const applyKey = Object.keys(rule)[0];
+		if (applyKeys.has(applyKey)) {
+			throw new InsightError(`Duplicate apply key: '${applyKey}'`);
+		}
+		applyKeys.add(applyKey);
+		validateApplyRule(rule[applyKey], ids);
+	}
+}
+
+function validateApplyRule(applyRule: ApplyRule, ids: string[]): void {
+	const { APPLYTOKEN, KEY } = applyRule;
+	validateKey(KEY, ids);
+	const numericTokens = new Set(["MAX", "MIN", "AVG", "SUM"]);
+	if (numericTokens.has(APPLYTOKEN)) {
+		if (!isNumericKey(KEY)) {
+			throw new InsightError(`${APPLYTOKEN} can only be applied to numeric keys`);
+		}
 	}
 }
