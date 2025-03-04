@@ -61,7 +61,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		// handle buildings/rooms
 		else {
-			result = await roomsManager.processRooms(data, id);
+			result = await roomsManager.processRooms(data);
 		}
 
 		datasets.push({ id: id.trim(), kind: kind, data: result, numRows: result.length });

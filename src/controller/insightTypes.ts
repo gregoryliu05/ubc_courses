@@ -1,20 +1,36 @@
 import { InsightDatasetKind } from "./IInsightFacade";
 
-export interface Room {
-	fullname: string; //  <td class="views-field views-field-title">
-	shortname: string; // <td class="views-field views-field-field-building-code">
-	number: string; // <td class="views-field views-field-field-room-number">
-	name: string; // shortname + number
-	address: string; // get from views-field views-field-field-building-address
+export interface Parse5Element {
+	nodeName: string;
+	tagName?: string;
+	attrs?: { name: string; value: string }[];
+	childNodes?: Parse5Element[];
+}
 
-	seats: number; // <td class="views-field views-field-field-room-capacity">
-	type: string; //  <td class="views-field views-field-field-room-type">
-	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
-	href: string; // <td class="views-field views-field-nothing">
-	// <a href="http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/ALRD-105">More info</a> </td>
+export interface Parse5TextNode {
+	nodeName: "#text";
+	value: string;
+	parentNode?: Parse5Element;
+}
+
+export interface Building {
+	fullname: string; //  <td class="views-field views-field-title"> -> building title
+	shortname: string; // <td class="views-field views-field-field-building-code"> -> building code
+	address: string; // get from views-field views-field-field-building-address -> address
+	href: string; // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
 
 	lat: number; // get this from geolocation api
 	lon: number; // get this from geolocation api
+}
+
+export interface Room extends Building {
+	name: string; // shortname + number
+
+	number: string; // <td class="views-field views-field-field-room-number">
+	seats: number; // <td class="views-field views-field-field-room-capacity">
+	type: string; //  <td class="views-field views-field-field-room-type">
+	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
+	// <a href="http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/ALRD-105">More info</a> </td>
 }
 
 export interface GeoResponse {
