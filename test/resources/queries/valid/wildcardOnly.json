@@ -1,0 +1,18 @@
+{
+	"title": "",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "**"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

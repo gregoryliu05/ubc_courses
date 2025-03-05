@@ -1,0 +1,18 @@
+{
+	"title": "Middle wildcard",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "C*c"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
