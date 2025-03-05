@@ -33,7 +33,7 @@ export default class RoomsManager {
 					});
 				})
 				.on("error", (error) => {
-					console.log("error", error)
+					console.log("error", error);
 					reject(error);
 				});
 		});
@@ -45,53 +45,89 @@ export default class RoomsManager {
 	// then get the table
 	// then get the table body
 	// then get all the tr
-	public async getValidBuildings(data: Parse5Element) {
+	public async getValidBuildings(data: Parse5Element):Promise<Building[]> {
 		let buildings: Building[] = [];
 
-		let divs: Parse5Element[] = this.getDescendantsByTag(data, "div", []);
+		const rows = this.getRowData(data);
+		buildings = await Promise.all(
+			rows.map(async (row) => {
+				const fullNameCol = this.getDescendantsByClass(row, "views-field views-field-title")[0];
+				const fullNameText = this.getDescendantsByTag(fullNameCol, "a")[0];
+				const shortnameCol = this.getDescendantsByClass(row, "views-field views-field-field-building-code")[0];
+				const addressCol = this.getDescendantsByClass(row, "views-field views-field-field-building-address")[0];
+				const addressText = this.getTextOfNode(addressCol);
+				const hrefNode = this.getDescendantsByClass(row, "views-field views-field-nothing")[0];
+				const hrefText = this.getHrefData(hrefNode);
+				//const locationInfo:GeoResponse = await this.getGeolocation(encodeURIComponent(addressText));
 
-		divs = divs.filter((div) => {
-			return div.attrs && div.attrs.length === 1 && div.attrs[0].value === "view-content";
-		});
-		if (!divs) {
-			throw new InsightError("invalid dataset");
-		}
-		const div:Parse5Element = divs[0]
-
-		const table: Parse5Element = this.getDescendantsByTag(div, "table", [])[0]
-		if (!table || (table.attrs && table.attrs[0].value !== "views-table cols-5 table")){
-			throw new InsightError("invalid dataset")
-		}
-		const tableBody: Parse5Element = this.getDescendantsByTag(table, "tbody", [])[0]
-		const rows = this.getDescendantsByTag(tableBody, "tr", [])
-		buildings = await Promise.all(rows.map(async row => {
-			const fullNameCol = this.getDescendantsByClass(row, "views-field views-field-title")[0];
-			const fullNameText = this.getDescendantsByTag(fullNameCol, "a")[0];
-			const shortnameCol = this.getDescendantsByClass(row, "views-field views-field-field-building-code")[0];
-			const addressCol = this.getDescendantsByClass(row, "views-field views-field-field-building-address")[0];
-			const addressText = this.getTextOfNode(addressCol)
-			const hrefText = fullNameText.attrs?.[0]?.value ?? "";
-			//const hrefInfo:GeoResponse = await this.getGeolocation(encodeURIComponent(addressText));
-
-			return {
-				fullname: this.getTextOfNode(fullNameText),
-				shortname: this.getTextOfNode(shortnameCol),
-				address: addressText, // get from views-field views-field-field-building-address -> address
-				href: hrefText, // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
-				// href should be like:
-				lat:  0 ,  // get this from geolocation api
-				lon:  0// get this from geolocation api
-			}
-
-		})
-		)
-		console.log(buildings)
-
+				return {
+					fullname: this.getTextOfNode(fullNameText),
+					shortname: this.getTextOfNode(shortnameCol),
+					address: addressText, // get from views-field views-field-field-building-address -> address
+					href: hrefText, // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
+					lat: 0, // get this from geolocation api
+					lon: 0, // get this from geolocation api
+				};
+			})
+		);
 		return buildings;
 	}
-	//
-	// public getValidRooms() {}
-	//
+
+	// take all the buildings
+	// need to get the file for each building to get the extra info
+	// div view content
+	// table views-table cols-5 table
+	// get the tbody
+	// then get each row -> each row is a room in the building
+	// each room
+	// get the href again for each room
+	// push each room to the rooms
+	public async getValidRooms(buildings: Building[], data: JSZip) {
+		const rooms: Room[] = [];
+
+		// iterate over the buildings
+		await Promise.all(
+			buildings.map(async (building) => {
+				const file = data.file(building.href.slice(2));
+				if (!file) {
+					return [];
+				}
+				const info = await file.async("string");
+				const node = parse5.parse(info) as unknown as Parse5Element;
+				const rows: Parse5Element[] = this.getRowData(node, building);
+				rows.forEach((row) => {
+					const roomNumberData: Parse5Element = this.getDescendantsByClass(row,
+						"views-field views-field-field-room-number"
+					)[0];
+					const roomNumberText = this.getTextOfNode(this.getDescendantsByTag(roomNumberData, "a")[0]);
+					const name = building.shortname + "_" + roomNumberText;
+					const roomSeatsText = this.getTextOfNode(
+						this.getDescendantsByClass(row, "views-field views-field-field-room-capacity")[0]
+					);
+					const roomTypeText = this.getTextOfNode(
+						this.getDescendantsByClass(row, "views-field views-field-field-room-type")[0]
+					);
+					const roomFurnitureText = this.getTextOfNode(
+						this.getDescendantsByClass(row, "views-field views-field-field-room-furniture")[0]
+					);
+					const hrefNode = this.getDescendantsByClass(row, "views-field views-field-nothing")[0];
+					const hrefText = this.getHrefData(hrefNode);
+					const room: Room = {
+						...building,
+						number: roomNumberText,
+						name: name,
+						seats: parseInt(roomSeatsText),
+						type: roomTypeText,
+						furniture: roomFurnitureText, // from the building file, <td class="views-field views-field-field-room-furniture">
+						href: hrefText,
+					};
+					rooms.push(room);
+				});
+			})
+		);
+
+		return rooms;
+	}
 
 	public async processRooms(data: JSZip): Promise<Room[]> {
 		if (!data.file("index.htm")) {
@@ -106,22 +142,14 @@ export default class RoomsManager {
 		const file: JSZipObject = data.file("index.htm")!;
 		const info: string = await file.async("string");
 
-		const rooms: Room[] = [];
-
 		const document = parse5.parse(info) as unknown as Parse5Element;
 
-		console.log("check", await this.getGeolocation(encodeURIComponent("1871 West Mall")))
-
-		const buildings = this.getValidBuildings(document);
+		const buildings = await this.getValidBuildings(document);
 
 		// building table within index file
 		// room table within the building's html file
-
-
-		const htmlNode = document.childNodes?.find((node) => node.nodeName === "html") as Parse5Element | undefined;
-		if (!htmlNode) {
-			throw new InsightError("HTML node not found");
-		}
+		const rooms: Room[] = await this.getValidRooms(buildings, data);
+		console.log(rooms);
 
 		//const result = this.getDescendantsByTag(htmlNode, "td", []);
 
@@ -167,19 +195,42 @@ export default class RoomsManager {
 		for (const childNode of nodesArray) {
 			const child = childNode as unknown as Parse5Element;
 			if (child.attrs && child.attrs.length === 1 && child.attrs[0].value === tag) {
-				results.push(child)
+				results.push(child);
 			}
-
 		}
 		return results;
 	}
 
-	public getTextOfNode(node: Parse5Element) {
+	public getTextOfNode(node: Parse5Element): string {
 		if (node.childNodes) {
 			if (node.childNodes[0].nodeName === "#text") {
 				return (node.childNodes[0] as Parse5TextNode).value.trim();
 			}
 		}
 		return "";
+	}
+
+	public getRowData(node: Parse5Element, building: Building = {} as Building) {
+		let tables = this.getDescendantsByTag(node, "table");
+		tables = tables.filter((table) => {
+			return table.attrs && table.attrs.length === 1 && table.attrs[0].value === "views-table cols-5 table";
+		});
+		if (!tables || tables.length === 0) {
+			return [];
+		}
+		const table: Parse5Element = tables[0];
+
+		const tableBody: Parse5Element = this.getDescendantsByTag(table, "tbody", [])[0];
+		//console.log("tableBody", tableBody.nodeName)
+		return this.getDescendantsByTag(tableBody, "tr", []);
+	}
+
+	public getHrefData(node: Parse5Element): string {
+		const hrefANode = this.getDescendantsByTag(node, "a")[0];
+		if (!hrefANode || !hrefANode.attrs) {
+			return "";
+		}
+
+		return hrefANode.attrs[0].value;
 	}
 }

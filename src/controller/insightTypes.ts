@@ -24,9 +24,8 @@ export interface Building {
 }
 
 export interface Room extends Building {
-	name: string; // shortname + number
-
 	number: string; // <td class="views-field views-field-field-room-number">
+	name: string; // shortname + number
 	seats: number; // <td class="views-field views-field-field-room-capacity">
 	type: string; //  <td class="views-field views-field-field-room-type">
 	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
