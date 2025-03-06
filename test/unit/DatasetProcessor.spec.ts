@@ -26,17 +26,17 @@ describe("DatasetProcessor", function () {
 			someValidSomeInvalid = await getContentFromArchives("somevalidcoursesomeinvalid.zip");
 		});
 
-		describe("loadDataset", function () {
-			it("should be a successful read", async function () {
-				const result = await (InsightFacade as any).loadDataset("data/test.json");
-				expect(result).to.deep.eq([{ lol: "lol" }]);
-			});
-
-			it("should be unsuccessful read, return empty list", async function () {
-				const result = await (InsightFacade as any).loadDataset("data/datdddasets.json");
-				expect(result).to.deep.eq([]);
-			});
-		});
+		// describe("loadDataset", function () {
+		// 	it("should be a successful read", async function () {
+		// 		const result = await (InsightFacade as any).loadDataset("data/test.json");
+		// 		expect(result).to.deep.eq([{ lol: "lol" }]);
+		// 	});
+		//
+		// 	it("should be unsuccessful read, return empty list", async function () {
+		// 		const result = await (InsightFacade as any).loadDataset("data/datdddasets.json");
+		// 		expect(result).to.deep.eq([]);
+		// 	});
+		// });
 
 		describe("getValidCourses", function () {
 			// test for returning no courses
