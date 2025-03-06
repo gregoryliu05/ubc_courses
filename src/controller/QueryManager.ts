@@ -1,9 +1,9 @@
-import {ApplyKey, ApplyRule, Dataset, Filter, Query, Section} from "./insightTypes";
+import { ApplyRule, Dataset, Filter, Query, Section } from "./insightTypes";
 import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 import { validate } from "./QueryValidator";
 import fs from "fs-extra";
 import { applyFilter, filterColumns, sortResult } from "./QueryExecutor";
-import {executeTransformations} from "./TransformationsExecutor";
+import { executeTransformations } from "./TransformationsExecutor";
 
 const maxResults: number = 5000;
 const dataFile = "data/datasets.json";
@@ -20,9 +20,9 @@ export class QueryManager {
 		return this.query;
 	}
 
-	private getApplyKeys(rules: ApplyRule[]): string[]{
+	private getApplyKeys(rules: ApplyRule[]): string[] {
 		const applykeys: string[] = [];
-		for(const r of rules){
+		for (const r of rules) {
 			applykeys.push(Object.keys(r)[0]);
 		}
 		return applykeys;
@@ -52,12 +52,11 @@ export class QueryManager {
 			}
 		}
 
-		if(this.query.TRANSFORMATIONS !== undefined){
-			result = executeTransformations(result,this.query.TRANSFORMATIONS,this.query.OPTIONS.COLUMNS);
+		if (this.query.TRANSFORMATIONS !== undefined) {
+			result = executeTransformations(result, this.query.TRANSFORMATIONS, this.query.OPTIONS.COLUMNS);
 		}
 
-
-		const rules = this.query.TRANSFORMATIONS?.APPLY || [] as ApplyRule[];
+		const rules = this.query.TRANSFORMATIONS?.APPLY || ([] as ApplyRule[]);
 		filterColumns(result, this.query.OPTIONS.COLUMNS as string[], this.getApplyKeys(rules));
 
 		if (this.query.OPTIONS.ORDER) {

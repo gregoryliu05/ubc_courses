@@ -101,7 +101,20 @@ export type LogicOperator = "AND" | "OR";
 export type MComparator = "LT" | "GT" | "EQ";
 
 export type MField = "avg" | "pass" | "fail" | "audit" | "year" | "lat" | "lon" | "seats";
-export type SField = "dept" | "id" | "instructor" | "title" | "uuid" | "fullname" | "shortname" | "number" | "name" | "address" | "type" | "furniture" | "href";
+export type SField =
+	| "dept"
+	| "id"
+	| "instructor"
+	| "title"
+	| "uuid"
+	| "fullname"
+	| "shortname"
+	| "number"
+	| "name"
+	| "address"
+	| "type"
+	| "furniture"
+	| "href";
 
 export type MKey = `${string}_${MField}`;
 export type SKey = `${string}_${SField}`;

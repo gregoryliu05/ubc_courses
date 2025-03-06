@@ -1,13 +1,13 @@
-import {AnyKey, ApplyRule, Key, TransformationsBody} from "./insightTypes";
+import { AnyKey, ApplyRule, Key, TransformationsBody } from "./insightTypes";
 import Decimal from "decimal.js";
-import {InsightResult} from "./IInsightFacade";
+import { InsightResult } from "./IInsightFacade";
 
-const applyMap: Record<string, (group: InsightResult[],applyRule: ApplyRule) => number> = {
-	MIN:applyMin,
-	MAX:applyMax,
-	AVG:applyAvg,
-	SUM:applySum,
-	COUNT:applyCount,
+const applyMap: Record<string, (group: InsightResult[], applyRule: ApplyRule) => number> = {
+	MIN: applyMin,
+	MAX: applyMax,
+	AVG: applyAvg,
+	SUM: applySum,
+	COUNT: applyCount,
 };
 export function executeTransformations(
 	results: InsightResult[],
@@ -89,77 +89,74 @@ function executeGroupApply(
 	return item;
 }
 
-function applyMin(group: InsightResult[],applyRule: ApplyRule): number{
-	const minObj =  Object.values(applyRule)[0];
+function applyMin(group: InsightResult[], applyRule: ApplyRule): number {
+	const minObj = Object.values(applyRule)[0];
 	const field = minObj?.MIN.toString().split("_")[1];
 
 	const head = group[0];
 
 	let minimum: number = Number.parseFloat(head[field] as string);
-	for(const item of group){
+	for (const item of group) {
 		const value: number = Number.parseFloat(item[field] as string);
-		minimum = Math.min(minimum,value);
+		minimum = Math.min(minimum, value);
 	}
 
 	return minimum;
 }
 
-function applyMax(group: InsightResult[],applyRule: ApplyRule): number{
-	const maxObj =  Object.values(applyRule)[0];
+function applyMax(group: InsightResult[], applyRule: ApplyRule): number {
+	const maxObj = Object.values(applyRule)[0];
 
 	const field = maxObj?.MAX.toString().split("_")[1];
 
 	const head = group[0];
 	let maximum: number = Number.parseFloat(head[field] as string);
-	for(const item of group){
+	for (const item of group) {
 		const value: number = Number.parseFloat(item[field] as string);
-		maximum = Math.max(maximum,value);
+		maximum = Math.max(maximum, value);
 	}
 
 	return maximum;
 }
 
-function applyAvg(group: InsightResult[],applyRule: ApplyRule): number{
-	const avgObj =  Object.values(applyRule)[0];
+function applyAvg(group: InsightResult[], applyRule: ApplyRule): number {
+	const avgObj = Object.values(applyRule)[0];
 
 	const field = avgObj?.AVG.toString().split("_")[1];
 
 	let total: Decimal = new Decimal(0);
 	const numRows = group.length;
 
-	for(const item of group){
-		const value = new Decimal(item[field] );
+	for (const item of group) {
+		const value = new Decimal(item[field]);
 		total = total.add(value);
 	}
 
-	const avg =  total.toNumber() / numRows;
+	const avg = total.toNumber() / numRows;
 
 	return Number(avg.toFixed(2));
 }
 
-function applySum(group: InsightResult[],applyRule: ApplyRule): number{
-	const sumObj =  Object.values(applyRule)[0];
+function applySum(group: InsightResult[], applyRule: ApplyRule): number {
+	const sumObj = Object.values(applyRule)[0];
 
 	const field = sumObj?.SUM.toString().split("_")[1];
 
-
 	let sum: number = 0;
-	for(const item of group){
+	for (const item of group) {
 		const value: number = Number.parseFloat(item[field] as string);
 		sum += value;
 	}
 
-
 	return Number(sum.toFixed(2));
 }
-function applyCount(group: InsightResult[],applyRule: ApplyRule): number{
-
-	const countObj =  Object.values(applyRule)[0];
+function applyCount(group: InsightResult[], applyRule: ApplyRule): number {
+	const countObj = Object.values(applyRule)[0];
 
 	const field = countObj?.COUNT.toString().split("_")[1];
 
 	const set = new Set();
-	for(const item of group){
+	for (const item of group) {
 		const value = item[field];
 		set.add(value);
 	}

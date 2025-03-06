@@ -1,4 +1,4 @@
-import {AnyKey, Filter, Key, LogicComparison, MComparison, Negation, SComparison, Section, Sort} from "./insightTypes";
+import { Filter, LogicComparison, MComparison, Negation, SComparison, Section, Sort } from "./insightTypes";
 import { InsightError, InsightResult } from "./IInsightFacade";
 
 export function applyFilter(section: Section, filter: Filter): boolean {
@@ -121,7 +121,7 @@ function compare(a: InsightResult, b: InsightResult, sort: Sort): number {
 		const valB = Number(b[key]);
 
 		if (valA !== valB) {
-			return isAscending ? (valA > valB ? 1 : -1) : (valA > valB ? -1 : 1);
+			return isAscending ? (valA > valB ? 1 : -1) : valA > valB ? -1 : 1;
 		}
 	}
 
@@ -137,7 +137,7 @@ export function sortResult(result: InsightResult[], sort: Sort): void {
 export function filterColumns(result: InsightResult[], keys: string[], applykeys: string[]): void {
 	result.forEach((section) => {
 		const keysToKeep: Record<string, string | number> = {};
-		const mkeys = ["avg","pass","fail","audit","year","lat","lon","seats"];
+		const mkeys = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
 
 		keys.forEach((col) => {
 			const parts = col.split("_");
@@ -163,4 +163,3 @@ export function filterColumns(result: InsightResult[], keys: string[], applykeys
 		Object.assign(section, keysToKeep);
 	});
 }
-
