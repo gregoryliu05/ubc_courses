@@ -52,7 +52,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		const data: JSZip = await InsightFacade.readFile(content);
-		//console.log(data);
+		//console.log("data", data);
 
 		// handle courses/sections
 		let result: Section[] | Room[];

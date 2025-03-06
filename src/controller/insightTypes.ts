@@ -17,18 +17,18 @@ export interface Building {
 	fullname: string; //  <td class="views-field views-field-title"> -> building title
 	shortname: string; // <td class="views-field views-field-field-building-code"> -> building code
 	address: string; // get from views-field views-field-field-building-address -> address
-	href: string; // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
+	href?: string; // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
 
 	lat: number; // get this from geolocation api
 	lon: number; // get this from geolocation api
 }
 
 export interface Room extends Building {
-	number: string; // <td class="views-field views-field-field-room-number">
-	name: string; // shortname + number
-	seats: number; // <td class="views-field views-field-field-room-capacity">
-	type: string; //  <td class="views-field views-field-field-room-type">
-	furniture: string; // from the building file, <td class="views-field views-field-field-room-furniture">
+	number?: string; // <td class="views-field views-field-field-room-number">
+	name?: string; // shortname + number
+	seats?: number; // <td class="views-field views-field-field-room-capacity">
+	type?: string; //  <td class="views-field views-field-field-room-type">
+	furniture?: string; // from the building file, <td class="views-field views-field-field-room-furniture">
 	// <a href="http://students.ubc.ca/campus/discover/buildings-and-classrooms/room/ALRD-105">More info</a> </td>
 }
 
