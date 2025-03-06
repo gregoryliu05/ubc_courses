@@ -1,8 +1,8 @@
 import {
 	IInsightFacade,
 	InsightDatasetKind,
-	InsightResult,
 	InsightError,
+	InsightResult,
 	NotFoundError,
 	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
@@ -43,6 +43,11 @@ describe("InsightFacade", function () {
 		let validSections: string;
 		let invalidFolderStructure: string;
 		let invalidJSON: string;
+		let campus: string;
+		let noindex: string;
+		let emptyIndex: string;
+		let noBuildings: string;
+		let noRooms: string;
 
 		before(async function () {
 			cpsc310 = await getContentFromArchives("cpsc310.zip");
@@ -52,6 +57,11 @@ describe("InsightFacade", function () {
 			validSections = await getContentFromArchives("validSections.zip");
 			invalidFolderStructure = await getContentFromArchives("invalidFolderStructure.zip");
 			invalidJSON = await getContentFromArchives("invalidJSON.zip");
+			campus = await getContentFromArchives("campus.zip");
+			noindex = await getContentFromArchives("campusnoindex.zip");
+			emptyIndex = await getContentFromArchives("campusemptyindex.zip");
+			noBuildings = await getContentFromArchives("campusnobuildings.zip");
+			noRooms = await getContentFromArchives("campusnovalidroomsorbuildings.zip");
 		});
 
 		beforeEach(async function () {
@@ -175,6 +185,64 @@ describe("InsightFacade", function () {
 				expect(err).to.be.instanceOf(InsightError);
 			}
 		});
+
+		it("should add valid rooms dataset", async function () {
+			try {
+				const result = await facade.addDataset("lol", campus, InsightDatasetKind.Rooms);
+				expect(result).to.have.members(["lol"]);
+			} catch {}
+		});
+
+		it("good should reject invalid rooms dataset", async function () {
+			try {
+				await facade.addDataset("fail", cpsc310, InsightDatasetKind.Rooms);
+				expect.fail("should have thrown InsightError");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it("good should reject no index file", async function () {
+			try {
+				await facade.addDataset("noindex", noindex, InsightDatasetKind.Rooms);
+				expect.fail("should have thrown InsightError");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+		// index file no table
+		it("good should reject index file no table", async function () {
+			try {
+				await facade.addDataset("invalidindex", emptyIndex, InsightDatasetKind.Rooms);
+				expect.fail("should have thrown InsightError");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		// No folder of buildings and rooms
+		it("good should reject, no buildings folder", async function () {
+			try {
+				await facade.addDataset("nobuildings", noBuildings, InsightDatasetKind.Rooms);
+				expect.fail("should have thrown InsightError");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+		// No valid buildings
+		// in this case, there are 2 building files, one doesn't have a table at all,
+		// one has a table but has no valid rooms in it.
+		it("good should reject, no valid rooms in the building files", async function () {
+			try {
+				await facade.addDataset("norooms", noRooms, InsightDatasetKind.Rooms);
+				expect.fail("should have thrown InsightError");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+		// Combination of file not exist/ no valid rooms in the building no building table
+		// Check for rooms themselves not being valid
+		// Make a building file with a building table, but no valid rooms within the table
 	});
 
 	describe("RemoveDataset", function () {
