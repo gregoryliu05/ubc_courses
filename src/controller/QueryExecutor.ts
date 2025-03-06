@@ -129,9 +129,7 @@ function compare(a: InsightResult, b: InsightResult, sort: Sort): number {
 }
 
 export function sortResult(result: InsightResult[], sort: Sort): void {
-	if (typeof sort === "string") {
-		result.sort((a: InsightResult, b: InsightResult) => compare(a, b, sort));
-	}
+	result.sort((a: InsightResult, b: InsightResult) => compare(a, b, sort));
 }
 
 export function filterColumns(result: InsightResult[], keys: string[], applykeys: string[]): void {
