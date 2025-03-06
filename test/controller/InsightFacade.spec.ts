@@ -391,6 +391,32 @@ describe("InsightFacade", function () {
 			expect(result).to.deep.members(expected);
 		}
 
+		async function checkQueryOrdered(this: Mocha.Context): Promise<void> {
+			if (!this.test) {
+				throw new Error(
+					"Invalid call to checkQuery." +
+					"Usage: 'checkQuery' must be passed as the second parameter of Mocha's it(..) function." +
+					"Do not invoke the function directly."
+				);
+			}
+			// Destructuring assignment to reduce property accesses
+			const { input, expected, errorExpected } = await loadTestQuery(this.test.title);
+			let result: InsightResult[] = []; // dummy value before being reassigned
+			try {
+				result = await facade.performQuery(input);
+			} catch (err) {
+				if (!errorExpected) {
+					expect.fail(`performQuery threw unexpected error: ${err}`);
+				}
+				expect(err).to.be.instanceOf(errorMap[expected as keyof typeof errorMap]);
+				return;
+			}
+			if (errorExpected) {
+				expect.fail(`performQuery resolved when it should have rejected with ${expected}`);
+			}
+			expect(result).to.deep.equal(expected);
+		}
+
 		before(async function () {
 			await clearDisk();
 
@@ -421,7 +447,9 @@ describe("InsightFacade", function () {
 		it("[valid/containsWildcard.json] Contains wildcard", checkQuery);
 		it("[valid/exactMatchWildcard.json] Exact match wildcard", checkQuery);
 		it("[valid/leftWildcard.json] Left wildcard", checkQuery);
-		it("[valid/ordered.json] Ordered results", checkQuery);
+		it.only("[valid/ordered.json] Ordered results", checkQueryOrdered);
+		it.only("[valid/orderedUP.json] Ordered results", checkQueryOrdered);
+		it.only("[valid/orderedDOWN.json] Ordered results", checkQueryOrdered);
 		it("[valid/rightWildcard.json] Right wildcard", checkQuery);
 		it("[valid/testTransformations.json] Testing transformations", checkQuery);
 		it("[valid/testTransformationsNoApply.json] Testing transformations no apply", checkQuery);
