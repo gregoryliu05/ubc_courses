@@ -355,6 +355,9 @@ describe("InsightFacade", function () {
 		it("[valid/leftWildcard.json] Left wildcard", checkQuery);
 		it("[valid/ordered.json] Ordered results", checkQuery);
 		it("[valid/rightWildcard.json] Right wildcard", checkQuery);
+		it.only("[valid/testTransformations.json] Testing transformations", checkQuery);
+		it.only("[valid/testTransformationsNoApply.json] Testing transformations no apply", checkQuery);
+		it.only("[valid/testTransformationsCount.json] Testing count transformations", checkQuery);
 
 		it("[invalid/missingWhere.json] Query missing WHERE", checkQuery);
 		it("[invalid/over5000.json] SELECT over 5000", checkQuery);
