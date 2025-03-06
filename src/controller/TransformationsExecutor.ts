@@ -36,7 +36,12 @@ export function executeGroup(items: InsightResult[], groupKeys: Key[]): Record<s
 	}, resultMap);
 }
 
-
+function getGroupKey(item: InsightResult, groupKeys: Key[]): any[] {
+	return groupKeys.map((key) => {
+		const field = key.split("_")[1];
+		return item[field];
+	});
+}
 function executeApply(
 	groups: InsightResult[][],
 	apply: ApplyRule[],
@@ -160,10 +165,4 @@ function applyCount(group: InsightResult[],applyRule: ApplyRule): number{
 	}
 
 	return set.size;
-}
-function getGroupKey(item: InsightResult, groupKeys: Key[]): any[] {
-	return groupKeys.map((key) => {
-		const field = key.split("_")[1];
-		return item[field];
-	});
 }
