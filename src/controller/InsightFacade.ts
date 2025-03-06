@@ -6,10 +6,12 @@ import {
 	InsightResult,
 	NotFoundError,
 } from "./IInsightFacade";
-import JSZip, { JSZipObject } from "jszip";
-import { CourseInfo, Dataset, Section } from "./insightTypes";
+import JSZip from "jszip";
+import { Dataset, Section, Room } from "./insightTypes";
 import fs from "fs-extra";
 import { QueryManager } from "./QueryManager";
+import SectionsManager from "./SectionsManager";
+import RoomsManager from "./RoomsManager";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -26,27 +28,6 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 
-	private static getValidCourses(data: JSZip): JSZipObject[] {
-		const courses: JSZipObject[] = [];
-
-		// having only startsWith doesn't consider if a courses folder has another folder called courses
-		// with courses that shouldn't be added, e.g. /courses/courses/CPSC310 -> shouldn't be added
-		// i asked ta about this, he said this case should never happen or smth? so very confused
-		Object.entries(data.files).forEach(([name, object]) => {
-			const parts: String[] = name.split("/");
-			if (
-				parts.length === 2 &&
-				parts[0] === "courses" &&
-				parts[1] !== "" &&
-				!name.includes("__MACOSX") &&
-				!name.includes(".DS_Store")
-			) {
-				courses.push(object);
-			}
-		});
-		return courses;
-	}
-
 	private static async readFile(content: string): Promise<JSZip> {
 		const jszip = new JSZip();
 		try {
@@ -56,74 +37,44 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 
-	private static async getValidSections(courses: JSZipObject[]): Promise<Section[]> {
-		const sections: Section[] = [];
-		const defaultYear = 1900;
-
-		const courseInfos: string[] = await Promise.all(
-			courses.map(async (course: JSZipObject): Promise<string> => course.async("text"))
-		);
-
-		for (const course of courseInfos) {
-			try {
-				JSON.parse(course).result.forEach((courseInfo: CourseInfo) => {
-					const section: Section = {
-						uuid: courseInfo.id.toString(),
-						id: courseInfo.Course,
-						title: courseInfo.Title,
-						instructor: courseInfo.Professor,
-						dept: courseInfo.Subject,
-						year: courseInfo.Section === "overall" ? defaultYear : parseInt(courseInfo.Year),
-						avg: courseInfo.Avg,
-						pass: courseInfo.Pass,
-						fail: courseInfo.Fail,
-						audit: courseInfo.Audit,
-					};
-					const check: Boolean = Object.values(section).every((val) => val !== null && val !== undefined);
-					if (check) {
-						sections.push(section);
-					}
-				});
-			} catch (err) {
-				throw new InsightError(err instanceof Error ? err.message + " error" : "error");
-			}
-		}
-		return sections;
-	}
-
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		if (kind !== InsightDatasetKind.Sections) {
+		const sectionsManager = new SectionsManager();
+		const roomsManager = new RoomsManager();
+		if (kind !== InsightDatasetKind.Sections && kind !== InsightDatasetKind.Rooms) {
 			throw new InsightError("invalid kind");
 		}
-
 		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
 
 		//  for each dataset, check dataset.id.trim() === id???
 		//  eg: "a" exists in database, add "a ", does this count as duplicate?
 		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
-			throw new InsightError("invalid id");
+			//  for each dataset, check dataset.id.trim() === id???
+			//  eg: "a" exists in database, add "a ", does this count as duplicate?
+			if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
+				throw new InsightError("invalid id");
+			}
+
+			const data: JSZip = await InsightFacade.readFile(content);
+			//console.log("data", data);
+
+			// handle courses/sections
+			let result: Section[] | Room[];
+			if (kind === InsightDatasetKind.Sections) {
+				result = await sectionsManager.processSections(data);
+			}
+			// handle buildings/rooms
+			else {
+				result = await roomsManager.processRooms(data);
+			}
+
+			datasets.push({id: id.trim(), kind: kind, data: result, numRows: result.length});
+			await fs.outputJSON(dataFile, datasets);
+			return datasets.map((dataset) => dataset.id);
 		}
-
-		const data: JSZip = await InsightFacade.readFile(content);
-		const courses: JSZipObject[] = InsightFacade.getValidCourses(data);
-
-		if (courses.length === 0) {
-			throw new InsightError("no valid courses");
-		}
-
-		const sections: Section[] = await InsightFacade.getValidSections(courses);
-
-		if (sections.length === 0) {
-			throw new InsightError("no valid sections");
-		}
-
-		datasets.push({ id: id.trim(), kind: kind, data: sections, numRows: sections.length });
-		await fs.outputJSON(dataFile, datasets);
-		return datasets.map((dataset) => dataset.id);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
-		if (id.trim() === "" || id.includes("_")) {
+			if (id.trim() === "" || id.includes("_")) {
 			throw new InsightError("invalid id");
 		}
 		let datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
@@ -142,14 +93,14 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		const queryManager = new QueryManager(query);
-		return queryManager.performQuery();
-	}
+			const queryManager = new QueryManager(query);
+			return queryManager.performQuery();
+		}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
+			const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
 		return datasets.map((dataset) => {
 			return { id: dataset.id, kind: dataset.kind, numRows: dataset.numRows };
 		});
 	}
-}
+	}
