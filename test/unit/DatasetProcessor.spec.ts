@@ -170,7 +170,6 @@ describe("DatasetProcessor", function () {
 			it("should return data, proper string", async function () {
 				try {
 					const res = await RoomsManager.getGeolocation(encodeURIComponent("6303 North West Marine Drive"));
-					console.log(res);
 					expect(res).to.deep.equal({
 						lat: 49.26958,
 						lon: -123.25741,
