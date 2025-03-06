@@ -156,4 +156,23 @@ describe("QueryValidator", function () {
 			}
 		});
 	});
+
+	describe("test validateTransformations", function () {
+		before(async function () {});
+
+		beforeEach(function () {
+			ids = [];
+		});
+
+		it("should reject empty GROUP", async function () {
+			const testQuery = await loadTestQuery("[invalid/missingGroup.json]");
+			try {
+				validate(testQuery.input as Query, ids);
+				expect.fail("Should have thrown InsightError.");
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+				expect(err).to.have.property("message", "GROUP must be a non-empty array");
+			}
+		});
+	});
 });

@@ -1,8 +1,9 @@
-import { Dataset, Filter, Query, Section } from "./insightTypes";
+import { ApplyRule, Dataset, Filter, Query, Section } from "./insightTypes";
 import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 import { validate } from "./QueryValidator";
 import fs from "fs-extra";
 import { applyFilter, filterColumns, sortResult } from "./QueryExecutor";
+import { executeTransformations } from "./TransformationsExecutor";
 
 const maxResults: number = 5000;
 const dataFile = "data/datasets.json";
@@ -17,6 +18,14 @@ export class QueryManager {
 
 	public getQuery(): Query {
 		return this.query;
+	}
+
+	private getApplyKeys(rules: ApplyRule[]): string[] {
+		const applykeys: string[] = [];
+		for (const r of rules) {
+			applykeys.push(Object.keys(r)[0]);
+		}
+		return applykeys;
 	}
 
 	public async performQuery(): Promise<InsightResult[]> {
@@ -43,14 +52,19 @@ export class QueryManager {
 			}
 		}
 
-		if (result.length > maxResults) {
-			return Promise.reject(new ResultTooLargeError("Over 5000 results found"));
+		if (this.query.TRANSFORMATIONS !== undefined) {
+			result = executeTransformations(result, this.query.TRANSFORMATIONS, this.query.OPTIONS.COLUMNS);
 		}
 
-		filterColumns(result, this.query.OPTIONS.COLUMNS as string[]);
+		const rules = this.query.TRANSFORMATIONS?.APPLY || ([] as ApplyRule[]);
+		filterColumns(result, this.query.OPTIONS.COLUMNS as string[], this.getApplyKeys(rules));
 
 		if (this.query.OPTIONS.ORDER) {
 			sortResult(result, this.query.OPTIONS.ORDER);
+		}
+
+		if (result.length > maxResults) {
+			return Promise.reject(new ResultTooLargeError("Over 5000 results found"));
 		}
 
 		return Promise.resolve(result);

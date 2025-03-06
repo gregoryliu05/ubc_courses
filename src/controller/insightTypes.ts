@@ -100,12 +100,27 @@ export interface Dataset {
 export type LogicOperator = "AND" | "OR";
 export type MComparator = "LT" | "GT" | "EQ";
 
-export type MField = "avg" | "pass" | "fail" | "audit" | "year";
-export type SField = "dept" | "id" | "instructor" | "title" | "uuid";
+export type MField = "avg" | "pass" | "fail" | "audit" | "year" | "lat" | "lon" | "seats";
+export type SField =
+	| "dept"
+	| "id"
+	| "instructor"
+	| "title"
+	| "uuid"
+	| "fullname"
+	| "shortname"
+	| "number"
+	| "name"
+	| "address"
+	| "type"
+	| "furniture"
+	| "href";
 
 export type MKey = `${string}_${MField}`;
 export type SKey = `${string}_${SField}`;
 export type Key = MKey | SKey;
+export type ApplyKey = string; // Apply keys must be unique and not contain underscores
+export type AnyKey = Key | ApplyKey;
 
 export type LogicComparison = {
 	[key in LogicOperator]?: Filter[];
@@ -133,16 +148,34 @@ export interface QueryBody {
 	WHERE: Filter | {};
 }
 
+export type Direction = "UP" | "DOWN";
+
+export type Sort = AnyKey | { dir: Direction; keys: AnyKey[] };
+
 export type Options = {
-	COLUMNS: Key[];
-	ORDER?: Key;
+	COLUMNS: AnyKey[];
+	ORDER?: Sort;
 };
 
 export interface QueryOptions {
-	OPTIONS: {
-		COLUMNS: Key[];
-		ORDER?: Key;
+	OPTIONS: Options;
+}
+
+export interface TransformationsBody {
+	GROUP: Key[];
+	APPLY: ApplyRule[];
+}
+
+export interface Transformations {
+	TRANSFORMATIONS: TransformationsBody;
+}
+
+export type ApplyToken = "MAX" | "MIN" | "AVG" | "COUNT" | "SUM";
+
+export interface ApplyRule {
+	[applyKey: string]: {
+		[applyToken in ApplyToken]: Key;
 	};
 }
 
-export type Query = QueryBody & QueryOptions;
+export type Query = QueryBody & QueryOptions & Partial<Transformations>;

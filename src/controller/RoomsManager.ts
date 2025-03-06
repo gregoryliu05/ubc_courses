@@ -4,6 +4,8 @@ import * as http from "node:http";
 import { GeoResponse, Room, Building, Parse5Element, Parse5TextNode } from "./insightTypes";
 import { InsightError } from "./IInsightFacade";
 
+const HTTP_NOT_FOUND = 404;
+
 export default class RoomsManager {
 	public static async getGeolocation(address: string): Promise<GeoResponse> {
 		return new Promise((resolve, reject) => {
@@ -26,12 +28,12 @@ export default class RoomsManager {
 
 				response.on("end", () => {
 					try {
-						if (response.statusCode === 404) {
+						if (response.statusCode === HTTP_NOT_FOUND) {
 							reject(new InsightError("geolocation not found" + address));
 						}
-						const result = JSON.parse(data)
+						const result = JSON.parse(data);
 						resolve(result);
-					} catch (error) {
+					} catch {
 						reject(new InsightError("geolocation response parsing failed"));
 					}
 				});

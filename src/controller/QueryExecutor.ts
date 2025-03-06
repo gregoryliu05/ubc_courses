@@ -1,4 +1,4 @@
-import { Filter, Key, LogicComparison, MComparison, Negation, SComparison, Section } from "./insightTypes";
+import { Filter, LogicComparison, MComparison, Negation, SComparison, Section, Sort } from "./insightTypes";
 import { InsightError, InsightResult } from "./IInsightFacade";
 
 export function applyFilter(section: Section, filter: Filter): boolean {
@@ -106,33 +106,60 @@ function applyIs(section: Section, filter: SComparison): boolean {
 	}
 }
 
-function compare(a: InsightResult, b: InsightResult, key: Key): number {
-	if (a[key] < b[key]) {
-		return -1;
-	} else if (a[key] > b[key]) {
-		return 1;
-	} else {
-		return 0;
+function compare(a: InsightResult, b: InsightResult, sort: Sort): number {
+	if (typeof sort === "string") {
+		const valA = Number(a[sort]);
+		const valB = Number(b[sort]);
+		return valA > valB ? 1 : valA < valB ? -1 : 0;
 	}
-}
-export function sortResult(result: InsightResult[], key: Key): void {
-	result.sort((a: InsightResult, b: InsightResult) => compare(a, b, key));
+
+	const { dir, keys } = sort;
+	const isAscending = dir === "UP";
+
+	for (const key of keys) {
+		const valA = Number(a[key]);
+		const valB = Number(b[key]);
+
+		if (valA !== valB) {
+			return isAscending ? (valA > valB ? 1 : -1) : valA > valB ? -1 : 1;
+		}
+	}
+
+	return 0;
 }
 
-export function filterColumns(result: InsightResult[], keys: string[]): void {
+export function sortResult(result: InsightResult[], sort: Sort): void {
+	if (typeof sort === "string") {
+		result.sort((a: InsightResult, b: InsightResult) => compare(a, b, sort));
+	}
+}
+
+export function filterColumns(result: InsightResult[], keys: string[], applykeys: string[]): void {
 	result.forEach((section) => {
 		const keysToKeep: Record<string, string | number> = {};
-		keys.forEach((k) => {
-			const key = k.split("_")[1];
-			if (key in section) {
-				keysToKeep[k] = section[key];
+		const mkeys = ["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"];
+
+		keys.forEach((col) => {
+			const parts = col.split("_");
+			const fieldName = parts[1];
+
+			if (applykeys.includes(col)) {
+				keysToKeep[col] = section[col] as number; // Handling apply keys
+			} else if (col in section) {
+				keysToKeep[col] = section[col];
+			} else if (mkeys.includes(fieldName)) {
+				keysToKeep[col] = section[fieldName] as number;
+			} else {
+				keysToKeep[col] = section[fieldName];
 			}
 		});
+
 		Object.keys(section).forEach((k) => {
 			if (!(k in keysToKeep)) {
 				delete section[k];
 			}
 		});
+
 		Object.assign(section, keysToKeep);
 	});
 }

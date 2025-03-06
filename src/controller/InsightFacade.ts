@@ -48,33 +48,29 @@ export default class InsightFacade implements IInsightFacade {
 		//  for each dataset, check dataset.id.trim() === id???
 		//  eg: "a" exists in database, add "a ", does this count as duplicate?
 		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
-			//  for each dataset, check dataset.id.trim() === id???
-			//  eg: "a" exists in database, add "a ", does this count as duplicate?
-			if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
-				throw new InsightError("invalid id");
-			}
-
-			const data: JSZip = await InsightFacade.readFile(content);
-			//console.log("data", data);
-
-			// handle courses/sections
-			let result: Section[] | Room[];
-			if (kind === InsightDatasetKind.Sections) {
-				result = await sectionsManager.processSections(data);
-			}
-			// handle buildings/rooms
-			else {
-				result = await roomsManager.processRooms(data);
-			}
-
-			datasets.push({id: id.trim(), kind: kind, data: result, numRows: result.length});
-			await fs.outputJSON(dataFile, datasets);
-			return datasets.map((dataset) => dataset.id);
+			throw new InsightError("invalid id");
 		}
+
+		const data: JSZip = await InsightFacade.readFile(content);
+		//console.log("data", data);
+
+		// handle courses/sections
+		let result: Section[] | Room[];
+		if (kind === InsightDatasetKind.Sections) {
+			result = await sectionsManager.processSections(data);
+		}
+		// handle buildings/rooms
+		else {
+			result = await roomsManager.processRooms(data);
+		}
+
+		datasets.push({ id: id.trim(), kind: kind, data: result, numRows: result.length });
+		await fs.outputJSON(dataFile, datasets);
+		return datasets.map((dataset) => dataset.id);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
-			if (id.trim() === "" || id.includes("_")) {
+		if (id.trim() === "" || id.includes("_")) {
 			throw new InsightError("invalid id");
 		}
 		let datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
@@ -93,14 +89,14 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-			const queryManager = new QueryManager(query);
-			return queryManager.performQuery();
-		}
+		const queryManager = new QueryManager(query);
+		return queryManager.performQuery();
+	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-			const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
+		const datasets: Dataset[] = await InsightFacade.loadDataset(dataFile);
 		return datasets.map((dataset) => {
 			return { id: dataset.id, kind: dataset.kind, numRows: dataset.numRows };
 		});
 	}
-	}
+}
