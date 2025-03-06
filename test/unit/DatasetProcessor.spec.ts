@@ -157,31 +157,28 @@ describe("DatasetProcessor", function () {
 		});
 	});
 	describe("RoomsManager", function () {
-
 		describe("getGeolocation", function () {
 			it("should return error, incorrect string", async function () {
 				try {
-					await RoomsManager.getGeolocation("lol")
-					expect.fail("should have thrown error")
+					await RoomsManager.getGeolocation("lol");
+					expect.fail("should have thrown error");
 				} catch (err) {
-					expect(err).to.be.instanceOf(InsightError)
+					expect(err).to.be.instanceOf(InsightError);
 				}
+			});
 
-			})
-
-			it("should return data, proper string", async function() {
+			it("should return data, proper string", async function () {
 				try {
-					const res = await RoomsManager.getGeolocation(encodeURIComponent("6303 North West Marine Drive"))
-					console.log(res)
+					const res = await RoomsManager.getGeolocation(encodeURIComponent("6303 North West Marine Drive"));
+					console.log(res);
 					expect(res).to.deep.equal({
 						lat: 49.26958,
-						lon: -123.25741
-					})
-
-				} catch  {
-					expect.fail("should not have thrown error")
+						lon: -123.25741,
+					});
+				} catch {
+					expect.fail("should not have thrown error");
 				}
-			})
-		})
+			});
+		});
 	});
 });

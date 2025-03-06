@@ -48,6 +48,9 @@ export default class InsightFacade implements IInsightFacade {
 		//  for each dataset, check dataset.id.trim() === id???
 		//  eg: "a" exists in database, add "a ", does this count as duplicate?
 		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
+		//  for each dataset, check dataset.id.trim() === id???
+		//  eg: "a" exists in database, add "a ", does this count as duplicate?
+		if (datasets.some((dataset) => dataset.id.trim() === id) || id.trim() === "" || id.includes("_")) {
 			throw new InsightError("invalid id");
 		}
 
