@@ -400,7 +400,6 @@ describe("InsightFacade", function () {
 		 *
 		 * Note: the 'this' parameter is automatically set by Mocha and contains information about the test.
 		 */
-
 		let sections: string;
 		let sections5000: string;
 		let sections5001: string;
@@ -492,10 +491,14 @@ describe("InsightFacade", function () {
 		it("[valid/ordered.json] Ordered results", checkQueryOrdered);
 		it("[valid/orderedUP.json] Ordered results", checkQueryOrdered);
 		it("[valid/orderedDOWN.json] Ordered results", checkQueryOrdered);
+		it("[valid/orderedMultipleKeys.json] Ordered results", checkQueryOrdered);
+		it("[valid/orderedRooms.json] Ordered results", checkQueryOrdered);
+		it("[valid/orderedApplyKey.json] Ordered results", checkQueryOrdered);
 		it("[valid/rightWildcard.json] Right wildcard", checkQuery);
 		it("[valid/testTransformations.json] Testing transformations", checkQuery);
 		it("[valid/testTransformationsNoApply.json] Testing transformations no apply", checkQuery);
 		it("[valid/testTransformationsCount.json] Testing count transformations", checkQuery);
+
 		it("[invalid/missingWhere.json] Query missing WHERE", checkQuery);
 		it("[invalid/over5000.json] SELECT over 5000", checkQuery);
 		it("[invalid/5001Results.json] SELECT 5001 results", checkQuery);
