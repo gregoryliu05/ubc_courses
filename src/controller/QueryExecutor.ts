@@ -108,8 +108,8 @@ function applyIs(section: Section, filter: SComparison): boolean {
 
 function compare(a: InsightResult, b: InsightResult, sort: Sort): number {
 	if (typeof sort === "string") {
-		const valA = Number(a[sort]);
-		const valB = Number(b[sort]);
+		const valA = a[sort];
+		const valB = b[sort];
 		return valA > valB ? 1 : valA < valB ? -1 : 0;
 	}
 
@@ -117,8 +117,8 @@ function compare(a: InsightResult, b: InsightResult, sort: Sort): number {
 	const isAscending = dir === "UP";
 
 	for (const key of keys) {
-		const valA = Number(a[key]);
-		const valB = Number(b[key]);
+		const valA = a[key];
+		const valB = b[key];
 
 		if (valA !== valB) {
 			return isAscending ? (valA > valB ? 1 : -1) : valA > valB ? -1 : 1;
