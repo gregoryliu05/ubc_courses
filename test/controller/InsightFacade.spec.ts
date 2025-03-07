@@ -48,6 +48,8 @@ describe("InsightFacade", function () {
 		let emptyIndex: string;
 		let noBuildings: string;
 		let noRooms: string;
+		let someRooms: string;
+		let someValidRooms: string;
 
 		before(async function () {
 			cpsc310 = await getContentFromArchives("cpsc310.zip");
@@ -62,6 +64,8 @@ describe("InsightFacade", function () {
 			emptyIndex = await getContentFromArchives("campusemptyindex.zip");
 			noBuildings = await getContentFromArchives("campusnobuildings.zip");
 			noRooms = await getContentFromArchives("campusnovalidroomsorbuildings.zip");
+			someRooms = await getContentFromArchives("campussomevalidrooms.zip");
+			someValidRooms = await getContentFromArchives("campussomevalid.zip");
 		});
 
 		beforeEach(async function () {
@@ -219,6 +223,8 @@ describe("InsightFacade", function () {
 				expect(err).to.be.instanceOf(InsightError);
 			}
 		});
+		// index file with table, but index file is missing some buildings???
+		// then make a test with where index file is missing the buildings
 
 		// No folder of buildings and rooms
 		it("good should reject, no buildings folder", async function () {
@@ -240,9 +246,26 @@ describe("InsightFacade", function () {
 				expect(err).to.be.instanceOf(InsightError);
 			}
 		});
-		// Combination of file not exist/ no valid rooms in the building no building table
-		// Check for rooms themselves not being valid
-		// Make a building file with a building table, but no valid rooms within the table
+
+		it("should add a bunch of datasets", async function () {
+			try {
+				await facade.addDataset("rooms", campus, InsightDatasetKind.Rooms);
+				await facade.addDataset("sections", validSections, InsightDatasetKind.Sections);
+				const res = await facade.addDataset("someRooms", someRooms, InsightDatasetKind.Rooms);
+				expect(res).to.have.members(["rooms", "sections", "someRooms"]);
+			} catch {
+				expect.fail("should not throw error");
+			}
+		});
+
+		it("should add a dataset", async function () {
+			try {
+				const res = await facade.addDataset("someRooms", someValidRooms, InsightDatasetKind.Rooms);
+				expect(res).to.have.members(["someRooms"]);
+			} catch {
+				expect.fail("should not throw error");
+			}
+		});
 	});
 
 	describe("RemoveDataset", function () {
@@ -329,9 +352,13 @@ describe("InsightFacade", function () {
 
 	describe("ListDataset", function () {
 		let cpsc310: string;
+		let campus: string;
+		let someRooms: string;
 
 		before(async function () {
 			cpsc310 = await getContentFromArchives("cpsc310.zip");
+			campus = await getContentFromArchives("campus.zip");
+			someRooms = await getContentFromArchives("campussomevalidrooms.zip");
 		});
 
 		beforeEach(async function () {
@@ -353,6 +380,18 @@ describe("InsightFacade", function () {
 				{ id: "b", kind: InsightDatasetKind.Sections, numRows: 39 },
 			]);
 		});
+
+		it("should successfully return a lot of datasets", async function () {
+			await facade.addDataset("rooms", campus, InsightDatasetKind.Rooms);
+			await facade.addDataset("moreRooms", someRooms, InsightDatasetKind.Rooms);
+			await facade.addDataset("cpsc310", cpsc310, InsightDatasetKind.Sections);
+			const result = await facade.listDatasets();
+			return expect(result).to.have.deep.members([
+				{ id: "rooms", kind: InsightDatasetKind.Rooms, numRows: 364 },
+				{ id: "moreRooms", kind: InsightDatasetKind.Rooms, numRows: 28 },
+				{ id: "cpsc310", kind: InsightDatasetKind.Sections, numRows: 39 },
+			]);
+		});
 	});
 
 	describe("PerformQuery", function () {
@@ -365,6 +404,7 @@ describe("InsightFacade", function () {
 		let sections: string;
 		let sections5000: string;
 		let sections5001: string;
+		let campus: string;
 		async function checkQuery(this: Mocha.Context): Promise<void> {
 			if (!this.test) {
 				throw new Error(
@@ -424,12 +464,14 @@ describe("InsightFacade", function () {
 			sections = await getContentFromArchives("pair.zip");
 			sections5000 = await getContentFromArchives("5000.zip");
 			sections5001 = await getContentFromArchives("5001.zip");
+			campus = await getContentFromArchives("campus.zip");
 			// Add the datasets to InsightFacade once.
 			// Will *fail* if there is a problem reading ANY dataset.
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
 				await facade.addDataset("sections-5001", sections5001, InsightDatasetKind.Sections);
 				await facade.addDataset("sections-5000", sections5000, InsightDatasetKind.Sections);
+				await facade.addDataset("rooms", campus, InsightDatasetKind.Rooms);
 			} catch (err) {
 				throw new Error(`In PerformQuery Before hook, dataset(s) failed to be added. \n${err}`);
 			}
@@ -447,14 +489,13 @@ describe("InsightFacade", function () {
 		it("[valid/containsWildcard.json] Contains wildcard", checkQuery);
 		it("[valid/exactMatchWildcard.json] Exact match wildcard", checkQuery);
 		it("[valid/leftWildcard.json] Left wildcard", checkQuery);
-		it.only("[valid/ordered.json] Ordered results", checkQueryOrdered);
-		it.only("[valid/orderedUP.json] Ordered results", checkQueryOrdered);
-		it.only("[valid/orderedDOWN.json] Ordered results", checkQueryOrdered);
+		it("[valid/ordered.json] Ordered results", checkQueryOrdered);
+		it("[valid/orderedUP.json] Ordered results", checkQueryOrdered);
+		it("[valid/orderedDOWN.json] Ordered results", checkQueryOrdered);
 		it("[valid/rightWildcard.json] Right wildcard", checkQuery);
 		it("[valid/testTransformations.json] Testing transformations", checkQuery);
 		it("[valid/testTransformationsNoApply.json] Testing transformations no apply", checkQuery);
 		it("[valid/testTransformationsCount.json] Testing count transformations", checkQuery);
-
 		it("[invalid/missingWhere.json] Query missing WHERE", checkQuery);
 		it("[invalid/over5000.json] SELECT over 5000", checkQuery);
 		it("[invalid/5001Results.json] SELECT 5001 results", checkQuery);
@@ -465,5 +506,6 @@ describe("InsightFacade", function () {
 		it("[invalid/multipleDatasetsOptions.json] Multiple datasets in OPTIONS", checkQuery);
 		it("[invalid/multipleDatasetsWhere.json] Multiple datasets in WHERE", checkQuery);
 		it("[invalid/orderNotInColumn.json] Order key not in COLUMNS", checkQuery);
+		it("[valid/allrooms.json] one maindataset ", checkQuery);
 	});
 });
