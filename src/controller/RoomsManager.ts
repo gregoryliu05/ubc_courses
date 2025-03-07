@@ -46,13 +46,11 @@ export default class RoomsManager {
 	}
 
 	private static async getValidBuildings(data: Parse5Element): Promise<Building[]> {
-		let buildings: Building[] = [];
+		const buildings: Building[] = [];
 		try {
 			const rows = this.getRowData(data);
-			if (!rows || rows.length === 0) {
-				return [];
-			}
-			buildings = await Promise.all(
+			if (!rows || rows.length === 0) return [];
+			await Promise.all(
 				rows.map(async (row) => {
 					const fullNameCol = this.getDescendantsByClass(row, "views-field views-field-title")[0];
 					const fullNameText = this.getDescendantsByTag(fullNameCol, "a")[0];
@@ -61,16 +59,19 @@ export default class RoomsManager {
 					const addressText = this.getTextOfNode(addressCol);
 					const hrefNode = this.getDescendantsByClass(row, "views-field views-field-nothing")[0];
 					const hrefText = this.getHrefData(hrefNode);
+					if (!addressText) return;
 					const locationInfo: GeoResponse = await this.getGeolocation(encodeURIComponent(addressText));
-
-					return {
+					const building: Building = {
 						fullname: this.getTextOfNode(fullNameText),
 						shortname: this.getTextOfNode(shortnameCol),
-						address: addressText, // get from views-field views-field-field-building-address -> address
-						href: hrefText, // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
-						lat: locationInfo.lat as unknown as number, // get this from geolocation api
-						lon: locationInfo.lon as unknown as number, // get this from geolocation api
+						address: addressText,
+						href: hrefText,
+						lat: locationInfo.lat as unknown as number,
+						lon: locationInfo.lon as unknown as number,
 					};
+					if (Object.values(building).every((value) => value !== undefined)) {
+						buildings.push(building);
+					}
 				})
 			);
 		} catch {
@@ -121,16 +122,12 @@ export default class RoomsManager {
 		const getText: (cls: string) => string | undefined = (cls: string): string | undefined => {
 			try {
 				const data = this.getDescendantsByClass(row, cls);
-				if (!data || data.length === 0) {
-					return undefined;
-				}
-				const text = this.getTextOfNode(data[0]);
-				return text.length > 0 ? text : undefined;
+				if (!data || data.length === 0) return undefined;
+				return this.getTextOfNode(data[0]);
 			} catch {
 				return undefined;
 			}
 		};
-
 		const number = this.getTextOfNode(this.getDescendantsByTag(row, "a")[0]);
 		const text = getText("views-field views-field-field-room-capacity");
 		const href = this.getHrefData(this.getDescendantsByClass(row, "views-field views-field-nothing")[0]);
@@ -163,7 +160,6 @@ export default class RoomsManager {
 		}
 
 		let rooms: Room[] = [];
-
 		try {
 			const file: JSZipObject = data.file("index.htm")!;
 			const info: string = await file.async("string");
@@ -175,7 +171,7 @@ export default class RoomsManager {
 			// building table within index file
 			// room table within the building's html file
 			rooms = await RoomsManager.getValidRooms(buildings, data);
-			//console.log("rooms", rooms)
+			//console.log(rooms)
 		} catch {
 			throw new InsightError("getting rooms failed");
 		}
@@ -201,26 +197,22 @@ export default class RoomsManager {
 		return res;
 	}
 
-	private static getDescendantsByClass(
-		node: Parse5Element,
-		tag: string,
-		results: Parse5Element[] = []
-	): Parse5Element[] {
+	private static getDescendantsByClass(node: Parse5Element, tag: string, res: Parse5Element[] = []): Parse5Element[] {
 		if (!node.childNodes) {
-			return results;
+			return res;
 		}
 		const nodesArray: Parse5Element[] = Array.from(node.childNodes);
 		for (const childNode of nodesArray) {
 			const child = childNode as unknown as Parse5Element;
 			if (child.attrs && child.attrs.length === 1 && child.attrs[0].value === tag) {
-				results.push(child);
+				res.push(child);
 			}
 		}
-		return results;
+		return res;
 	}
 
-	private static getTextOfNode(node: Parse5Element): string {
-		if (node.childNodes) {
+	private static getTextOfNode(node: Parse5Element): string | undefined {
+		if (node?.childNodes) {
 			if (node.childNodes[0].nodeName === "#text") {
 				return (node.childNodes[0] as Parse5TextNode).value.trim();
 			}

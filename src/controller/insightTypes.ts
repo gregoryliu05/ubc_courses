@@ -14,13 +14,13 @@ export interface Parse5TextNode {
 }
 
 export interface Building {
-	fullname: string; //  <td class="views-field views-field-title"> -> building title
-	shortname: string; // <td class="views-field views-field-field-building-code"> -> building code
-	address: string; // get from views-field views-field-field-building-address -> address
+	fullname?: string; //  <td class="views-field views-field-title"> -> building title
+	shortname?: string; // <td class="views-field views-field-field-building-code"> -> building code
+	address?: string; // get from views-field views-field-field-building-address -> address
 	href?: string; // <td class="views-field views-field-nothing"> -> href -> in an <a> in the <td>
 
-	lat: number; // get this from geolocation api
-	lon: number; // get this from geolocation api
+	lat?: number; // get this from geolocation api
+	lon?: number; // get this from geolocation api
 }
 
 export interface Room extends Building {
