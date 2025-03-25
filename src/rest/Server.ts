@@ -3,16 +3,24 @@ import { StatusCodes } from "http-status-codes";
 import { Log } from "@ubccpsc310/project-support";
 import * as http from "http";
 import cors from "cors";
+import InsightFacade from "../controller/InsightFacade";
+import { InsightDatasetKind, NotFoundError } from "../controller/IInsightFacade";
 
 export default class Server {
 	private readonly port: number;
 	private express: Application;
 	private server: http.Server | undefined;
+	private facade: InsightFacade;
 
 	constructor(port: number) {
 		Log.info(`Server::<init>( ${port} )`);
 		this.port = port;
 		this.express = express();
+		this.facade = new InsightFacade();
+		this.addDataset = this.addDataset.bind(this);
+		this.removeDataset = this.removeDataset.bind(this);
+		this.performQuery = this.performQuery.bind(this);
+		this.listDatasets = this.listDatasets.bind(this);
 
 		this.registerMiddleware();
 		this.registerRoutes();
@@ -89,6 +97,10 @@ export default class Server {
 		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
+		this.express.put("/dataset/:id/:kind", this.addDataset);
+		this.express.delete("/dataset/:id", this.removeDataset);
+		this.express.get("/datasets", this.listDatasets);
+		this.express.post("/query", this.performQuery);
 	}
 
 	// The next two methods handle the echo service.
@@ -109,6 +121,47 @@ export default class Server {
 			return `${msg}...${msg}`;
 		} else {
 			return "Message not provided";
+		}
+	}
+
+	private async addDataset(req: Request, res: Response): Promise<void> {
+		try {
+			const response =
+				await this.facade.addDataset(req.params.id, req.body, req.params.kind as InsightDatasetKind);
+			res.status(StatusCodes.OK).json({ result: response });
+		} catch (err: any) {
+			res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+		}
+	}
+
+	private async removeDataset(req: Request, res: Response): Promise<void> {
+		try {
+			const response = await this.facade.removeDataset(req.params.id);
+			res.status(StatusCodes.OK).json({ result: response });
+		} catch (err: any) {
+			if (err instanceof NotFoundError) {
+				res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+			} else {
+				res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+			}
+		}
+	}
+
+	private async listDatasets(req: Request, res: Response): Promise<void> {
+		try {
+			const response = await this.facade.listDatasets();
+			res.status(StatusCodes.OK).json({ result: response });
+		} catch (err: any) {
+			res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+		}
+	}
+
+	private async performQuery(req: Request, res: Response): Promise<void> {
+		try {
+			const response = await this.facade.performQuery(req.body);
+			res.status(StatusCodes.OK).json({ result: response });
+		} catch (err: any) {
+			res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
 		}
 	}
 }
