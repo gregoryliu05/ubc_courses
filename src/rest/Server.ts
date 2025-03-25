@@ -126,8 +126,9 @@ export default class Server {
 
 	private async addDataset(req: Request, res: Response): Promise<void> {
 		try {
-			const response =
-				await this.facade.addDataset(req.params.id, req.body, req.params.kind as InsightDatasetKind);
+			const { id, kind } = req.params;
+			const data = req.body;
+			const response = await this.facade.addDataset(id, data, kind as InsightDatasetKind);
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err: any) {
 			res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
