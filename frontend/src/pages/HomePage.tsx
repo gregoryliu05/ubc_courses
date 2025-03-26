@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 
 const HomePage = () => {
-	// Implement add and remove datasets here -> addDataset on another page/component
+	// USER STORIES: Basic Dataset Display, Viewing Dataset Details, Sorting Datasets by Name, Filter Datasets
 	interface Dataset {
 		id: string;
 		kind: string;
