@@ -91,6 +91,11 @@ function executeGroupApply(
 
 function applyMin(group: InsightResult[], applyRule: ApplyRule): number {
 	const minObj = Object.values(applyRule)[0];
+
+	if (!minObj?.MIN) {
+		throw new Error("Invalid ApplyRule: MIN not found");
+	}
+
 	const field = minObj?.MIN.toString().split("_")[1];
 
 	const head = group[0];
@@ -107,6 +112,10 @@ function applyMin(group: InsightResult[], applyRule: ApplyRule): number {
 function applyMax(group: InsightResult[], applyRule: ApplyRule): number {
 	const maxObj = Object.values(applyRule)[0];
 
+	if (!maxObj?.MAX) {
+		throw new Error("Invalid ApplyRule: MAX not found");
+	}
+
 	const field = maxObj?.MAX.toString().split("_")[1];
 
 	const head = group[0];
@@ -121,6 +130,10 @@ function applyMax(group: InsightResult[], applyRule: ApplyRule): number {
 
 function applyAvg(group: InsightResult[], applyRule: ApplyRule): number {
 	const avgObj = Object.values(applyRule)[0];
+
+	if (!avgObj?.AVG) {
+		throw new Error("Invalid ApplyRule: AVG not found");
+	}
 
 	const field = avgObj?.AVG.toString().split("_")[1];
 
@@ -140,6 +153,10 @@ function applyAvg(group: InsightResult[], applyRule: ApplyRule): number {
 function applySum(group: InsightResult[], applyRule: ApplyRule): number {
 	const sumObj = Object.values(applyRule)[0];
 
+	if (!sumObj?.SUM) {
+		throw new Error("Invalid ApplyRule: SUM not found");
+	}
+
 	const field = sumObj?.SUM.toString().split("_")[1];
 
 	let sum: number = 0;
@@ -152,6 +169,10 @@ function applySum(group: InsightResult[], applyRule: ApplyRule): number {
 }
 function applyCount(group: InsightResult[], applyRule: ApplyRule): number {
 	const countObj = Object.values(applyRule)[0];
+
+	if (!countObj?.COUNT) {
+		throw new Error("Invalid ApplyRule: COUNT not found");
+	}
 
 	const field = countObj?.COUNT.toString().split("_")[1];
 

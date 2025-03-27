@@ -71,9 +71,14 @@ function validateApply(apply: ApplyRule[], ids: string[]): void {
 		}
 
 		const applyToken = getValidApplyToken(rule[applyKey]);
-		validateApplyKeyType(rule[applyKey][applyToken], ids);
+		const keyToValidate = rule[applyKey]?.[applyToken];
 
-		validateApplyTokenUsage(applyToken, rule[applyKey][applyToken], ids);
+		if (!keyToValidate) {
+			throw new InsightError(`Missing key for apply token ${applyToken} in apply rule ${applyKey}`);
+		}
+		validateApplyKeyType(keyToValidate, ids);
+
+		validateApplyTokenUsage(applyToken, keyToValidate, ids);
 	}
 }
 
