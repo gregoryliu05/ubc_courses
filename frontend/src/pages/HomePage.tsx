@@ -57,13 +57,13 @@ const HomePage = () => {
 			});
 
 			if (!response.ok) {
-				throw new Error("Failed to upload the dataset");
+				const errResponse = await response.json();
+				throw new Error(errResponse.error);
 			}
-
-			alert("Dataset uploaded successfully!");
 			setShowPopup(false);
 			setRefresh((prev) => !prev);
 		} catch (error) {
+			alert(error);
 			console.error("Error uploading dataset:", error);
 		}
 	};
@@ -75,13 +75,13 @@ const HomePage = () => {
 			});
 
 			if (!response.ok) {
-				throw new Error("Failed to delete the dataset");
+				const errResponse = await response.json();
+				throw new Error(errResponse.error);
 			}
-
-			alert("Dataset deleted successfully!");
 
 			setRefresh((prev) => !prev);
 		} catch (error) {
+			alert(error);
 			console.error("Error deleting dataset:", error);
 		}
 	};
@@ -118,7 +118,7 @@ const HomePage = () => {
 								<span className="text-sm text-gray-500">{expanded[dataset.id] ? "▲" : "▼"}</span>
 							</div>
 							{expanded[dataset.id] && (
-								<div className="justify-between flex">
+								<div className="justify-between flex pl-3 text-sm">
 									<div className="p-3 bg-white flex gap-6">
 										<div className="flex gap-3">
 											<div className="font-medium">Kind</div>
@@ -143,7 +143,7 @@ const HomePage = () => {
 					))}
 					<div className="pb-2">
 						<div
-							className="flex items-center p-3 justify-center text-gray-500 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
+							className="flex items-center p-3 justify-center text-gray-500 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer mb-12"
 							onClick={() => setShowPopup(true)}
 						>
 							+
