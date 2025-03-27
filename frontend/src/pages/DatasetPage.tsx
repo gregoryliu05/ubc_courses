@@ -1,9 +1,6 @@
-
-// Implement Data Insights part here -> use library
-// USER STORIES: Filtering and Sorting Sections, Export Graphs as Images
 import {useEffect, useState} from "react";
 import {useParams} from 'react-router';
-import {Query} from "../../../src/controller/insightTypes.ts";
+import {MKey, Query} from "../../../src/controller/insightTypes.ts";
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -13,250 +10,324 @@ import {
 	Tooltip,
 	Legend
 } from 'chart.js';
-import { Bar, Line } from "react-chartjs-2";
+import { Bar, Line, Scatter } from "react-chartjs-2";
 import "chart.js/auto";
-
-
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-// I need to make a new component for the graphs so i can just pass the id as props into it and then
-// each query can just use it
 
-const generalQuery = {
-	"WHERE": {
-		"GT": {
-			"sections_avg":90
+const DatasetPage = () => {
+	const {datasetID} = useParams<{datasetID: string}>();
+	const avgKey: MKey = `${datasetID}_avg`
+	//const yearKey:string = `${datasetID}_year`
+
+	const graph1query: Query = {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				`${datasetID}_dept`,
+				"totalAvg"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [`${datasetID}_dept`],
+			"APPLY": [
+				{"totalAvg": {"AVG": `${datasetID}_avg`}}
+			]
 		}
-	},
-	"OPTIONS": {
-		"COLUMNS": [
-			"sections_uuid",
-			"sections_id",
-			"sections_title",
-			"sections_instructor",
-			"sections_dept",
-			"sections_avg",
-			"sections_pass",
-			"sections_fail",
-			"sections_audit"
-		]
 	}
-}
-const graph1query =  {
-	"WHERE": {
-	},
-	"OPTIONS": {
-		"COLUMNS": [
-			"sections_dept",
-			"totalAvg"
-		],
-		"ORDER": {
-			"dir": "DOWN",
-			"keys": ["totalAvg"]
-		}
-	},
-	"TRANSFORMATIONS": {
-		"GROUP": ["sections_dept"],
-		"APPLY": [
-			{ "totalAvg": { "AVG": "sections_avg" } }
-		]
-	}
-}
-const graph2query =  { // TODO: this one  I need to call twice split at 73
-	"WHERE": {
-		"LT": {
-			"sections_avg":73
-		}
-	},
-	"OPTIONS": {
-		"COLUMNS": [
-			"sections_instructor",
-			"totalPass",
-			"totalFail"
-		],
-		"ORDER": {
-			"dir": "DOWN",
-			"keys": ["totalFail"]
-		}
-	},
-	"TRANSFORMATIONS": {
-		"GROUP": ["sections_instructor"],
-		"APPLY": [
-			{ "totalPass": { "SUM": "sections_pass" } },
-			{ "totalFail": { "SUM": "sections_fail" } }
-		]
-	}
-}
-const graph3query = {
+	const graph2query: Query = {
 		"WHERE": {
+			"LT": {
+				[avgKey]: 75
+			}
 		},
 		"OPTIONS": {
 			"COLUMNS": [
-				"sections_year",
-				"totalSections"
+				`${datasetID}_instructor`,
+				"totalPass",
+				"totalFail"
 			],
 			"ORDER": {
 				"dir": "DOWN",
-				"keys": ["sections_year"]
+				"keys": ["totalPass"]
 			}
 		},
 		"TRANSFORMATIONS": {
-			"GROUP": ["sections_year"],
+			"GROUP": [`${datasetID}_instructor`],
 			"APPLY": [
-				{ "totalSections": { "COUNT": "sections_uuid"}}
+				{"totalPass": {"SUM": `${datasetID}_pass`}},
+				{"totalFail": {"SUM": `${datasetID}_fail`}}
+			]
+		}
+	}
+	const graph2query2: Query = {
+		"WHERE": {
+			"GT": {
+				[avgKey]: 74.99
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				`${datasetID}_instructor`,
+				"totalPass",
+				"totalFail"
+			],
+			"ORDER": {
+				"dir": "DOWN",
+				"keys": ["totalPass"]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [`${datasetID}_instructor`],
+			"APPLY": [
+				{"totalPass": {"SUM": `${datasetID}_pass`}},
+				{"totalFail": {"SUM": `${datasetID}_fail`}}
+			]
+		}
+	}
+	const graph3query: Query = {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				`${datasetID}_year`,
+				"totalSections"
+			],
+			"ORDER": {
+				"dir": "UP",
+				"keys": [`${datasetID}_year`]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [`${datasetID}_year`],
+			"APPLY": [
+				{"totalSections": {"COUNT": `${datasetID}_uuid`}}
 
 			]
 		}
 	}
-const queries = [generalQuery,graph1query, graph2query, graph3query]
 
-const DatasetPage = () => {
-	// I NEED 3 insights
-	// avg of courses by dept by yr?
-	// do post calls to api
-	// use the dataset id as a param in the query
-	// make the query the request body when i call the post
-	const [graphData, setGraphData] = useState(null)
+	const queries: Query[] = [graph1query, graph2query, graph2query2, graph3query]
+
+	type ResultRow = {
+		[key: string]: string | number;
+	}
+
+	const [deptData, setDeptData] = useState<string[]>([])
+	const [courseAvgData, setCourseAvgData] = useState<number[]>([])
+	const [instructorData, setInstructorData] = useState<string[]>([])
+	const [failRateData, setFailRateData] = useState<number[]>([])
+	const [yearData, setYearData] = useState<number[]>([])
+	const [sectionData, setSectionData] = useState<number[]>([])
 	const [loading, setLoading] = useState(true)
-	const {datasetID} = useParams<{datasetID:string}>();
 
 
 	useEffect(() => {
-		console.log("testsststst", datasetID)
-		const fetchWithErrorHandling = async (query:Query) => {
-				const res = await fetch("http://localhost:4321/query", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify(query)
-				});
+		const fetchWithErrorHandling = async (query: Query) => {
+			const res = await fetch("http://localhost:4321/query", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(query)
+			});
 
-				if (!res.ok) throw new Error(`HTTP ${res.status}`);
-				return await res.json();
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			return await res.json();
 		};
 
 		const fetchQueryData = async () => {
 			try {
 				const responses = await Promise.all(
-					 queries.map(query => fetchWithErrorHandling(query)))
+					queries.map(query => fetchWithErrorHandling(query)))
 
+				const graph1Info = responses[0].result
+				const deptInfo = graph1Info.map((row: ResultRow) => {
+					return row[`${datasetID}_dept`];
+				})
+				setDeptData(deptInfo)
 
-				setGraphData(responses)
+				const avgInfo = graph1Info.map((row: ResultRow) => {
+					return row.totalAvg
+				})
+				setCourseAvgData(avgInfo)
+
+				const merged: Record<string, ResultRow> = {};
+
+				[...responses[1].result, ...responses[2].result].forEach((row) => {
+					const instructor = row[`${datasetID}_instructor`];
+
+					if (!merged[instructor]) {
+						merged[instructor] = {...row};
+					} else {
+						merged[instructor].totalPass += row.totalPass;
+						merged[instructor].totalFail += row.totalFail;
+					}
+				});
+
+				let combined = Object.values(merged);
+				combined = combined.filter((row) => row[`${datasetID}_instructor`] !== "")
+				const instructorInfo: string[] = combined.map(
+					(row: ResultRow) => `${row[`${datasetID}_instructor`]}`
+				);
+				setInstructorData(instructorInfo)
+				const failRateInfo = combined.map(row =>
+					(Number(row.totalFail) / (Number(row.totalFail) + Number(row.totalPass))) * 100)
+				setFailRateData(failRateInfo)
+
+				const graph3Info = responses[3].result.filter((row: ResultRow) => row[`${datasetID}_year`] !== 1900)
+				const yearInfo = graph3Info.map((row: ResultRow) => {
+					return row[`${datasetID}_year`]
+				})
+				const sectionsInfo = graph3Info.map((row: ResultRow) => {
+					return row.totalSections
+				})
+				setYearData(yearInfo)
+				setSectionData(sectionsInfo)
+
 			} catch (err) {
 				console.log("Error with fetching the data from the queries", err)
-				setGraphData(['test data', "test data"])
 			} finally {
 				setLoading(false)
 			}
 		}
 		fetchQueryData()
-		console.log(graphData)
 
 	}, [datasetID]);
 
 	return (
-		<>
-			<div>
-				<Bar
-					key={JSON.stringify(graphData)} // This forces remount
-					data={{
-						labels: ['CPSC', 'COMM', 'PSYC'],
-						datasets: [
-							{
-								label: 'Average Grade',
-								data: [80, 75, 56],
-								backgroundColor: 'rgba(75, 192, 192, 0.6)',
-							}
-						]
-					}}
-					options={{
-						responsive: true,
-						plugins: {
-							legend: {
-								position: 'top'
-							},
-							title: {
-								display: true,
-								text: 'Department Averages'
-							}
-						}
-					}}
-				/>
+		<div className="px-6 py-4 space-y-6">
+			<h1 className="text-2xl font-bold text-center text-gray-800">
+				Dataset Overview: <span className="text-blue-600">{datasetID}</span>
+			</h1>
 
-			</div>
-			<div>
-			<Bar
-				key={JSON.stringify(graphData)} // This forces remount
-				data={{
-					labels: ['gateman', 'holloway', 'alan'],
-					datasets: [
-						{
-							label: 'Fail rate ',
-							data: [6.5, 4.3, 2.3],
-							backgroundColor: 'rgba(75, 192, 192, 0.6)',
-						}
-					]
-				}}
-				options={{
-					indexAxis: 'y', // Horizontal bars
-					plugins: {
-						title: {
-							display: true,
-							text: 'Fail Rate by Instructor'
-						}
-					},
-					scales: {
-						x: {
-							title: {
-								display: true,
-								text: 'Fail Rate (%)'
-							},
-							min: 0,
-							max: 100
-						},
-						y: {
-							title: {
-								display: true,
-								text: 'Instructor'
-							}
-						}
-					}
-				}}
-			/>
+			{loading ? (
+				<div className="text-center text-lg text-gray-500">Loading...</div>
+			) : (
+				<>
+					{/* Chart 1 - Scatterplot */}
+					<div className="bg-white p-6 rounded-2xl shadow-md">
+						<h2 className="text-lg font-semibold text-gray-700 mb-4">
+							Department Averages (Scatter Plot)
+						</h2>
+						<Scatter
+							data={{
+								datasets: [
+									{
+										label: 'Average Grade',
+										data: deptData.map((dept, index) => ({
+											x: index,
+											y: courseAvgData[index],
+											label: dept,
+										})),
+										backgroundColor: 'rgba(75, 192, 192, 0.6)',
+									},
+								],
+							}}
+							options={{
+								responsive: true,
+								plugins: {
+									legend: {position: 'top'},
+									title: {
+										display: true,
+										text: 'Department Averages',
+									},
+									tooltip: {
+										callbacks: {
+											label: (context) => {
+												const dept = deptData[context.dataIndex];
+												const point = context.raw as {
+													x: number;
+													y: number;
+													label: string;
+												};
+												const avg = point.y.toFixed(2);
+												return `${dept}: ${avg}`;
+											},
+										},
+									},
+								},
+								scales: {
+									x: {
+										title: {display: true, text: 'Department Index'},
+									},
+									y: {
+										title: {display: true, text: 'Average Grade'},
+										beginAtZero: true,
+										min: 50,
+										max: 100,
+									},
+								},
+							}}
+						/>
+					</div>
 
+					{/* Chart 2 - Fail Rate by Instructor */}
+					<div className="bg-white p-6 rounded-2xl shadow-md">
+						<h2 className="text-lg font-semibold text-gray-700 mb-4">
+							Fail Rate by Top 20 Instructors
+						</h2>
+						<Bar
+							data={{
+								labels: instructorData.slice(0, 20),
+								datasets: [
+									{
+										label: 'Fail rate',
+										data: failRateData.slice(0, 20),
+										backgroundColor: 'rgba(75, 192, 192, 0.6)',
+									},
+								],
+							}}
+							options={{
+								plugins: {
+									title: {
+										display: true,
+										text: 'Fail Rate of Top 20 Instructors That Teach the Most Students',
+									},
+								},
+								scales: {
+									x: {
+										title: {display: true, text: 'Instructor'},
+									},
+									y: {
+										title: {display: true, text: 'Fail Rate (%)'},
+									},
+								},
+							}}
+						/>
+					</div>
+
+					{/* Chart 3 - Line Chart for Section Counts */}
+					<div className="bg-white p-6 rounded-2xl shadow-md">
+						<h2 className="text-lg font-semibold text-gray-700 mb-4">
+							Section Count by Year
+						</h2>
+						<Line
+							data={{
+								labels: yearData,
+								datasets: [
+									{
+										label: 'Total Sections',
+										data: sectionData,
+										backgroundColor: 'rgba(75, 192, 192, 0.6)',
+									},
+								],
+							}}
+							options={{
+								responsive: true,
+								plugins: {
+									legend: {position: 'top'},
+									title: {
+										display: true,
+										text: '# of Total Class Sections by Year',
+									},
+								},
+							}}
+						/>
+					</div>
+				</>
+			)}
 		</div>
-			<div>
-				<Line
-					key={JSON.stringify(graphData)} // This forces remount
-					data={{
-					labels: ["2020", "2021", "2022", "2023", "2024"],
-					datasets: [
-						{label: "Total Enrollment",
-						data: [54000,55030, 60123, 59203, 23423], backgroundColor: 'rgba(75, 192, 192, 0.6)'
-						}
-						]
-				}}
-					  options = {{
-						  responsive: true,
-						  plugins: {
-							  legend: {
-								  position: 'top'
-							  },
-							  title: {
-								  display: true,
-								  text: 'Enrollment Count'
-							  }
-						  }
-					  }}
-
-				/>
-			</div>
-			<div>
-
-			</div>
-
-		</>
-	)
+	);
 }
+
 
 export default DatasetPage;

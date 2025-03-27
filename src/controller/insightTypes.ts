@@ -174,7 +174,7 @@ export type ApplyToken = "MAX" | "MIN" | "AVG" | "COUNT" | "SUM";
 
 export interface ApplyRule {
 	[applyKey: string]: {
-		[applyToken in ApplyToken]: Key;
+		[applyToken in ApplyToken]?: Key;
 	};
 }
 

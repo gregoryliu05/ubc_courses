@@ -9,7 +9,7 @@ function App() {
   return (
     <>
 		<h1 className="text-3xl font-bold underline">
-			Hello world!
+			Welcome to InsightUBC!
 		</h1>
 		<NavLink to={"/datasets"}>
 			Click here to get started

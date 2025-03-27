@@ -4,6 +4,7 @@ const UploadPopup = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [datasetId, setDatasetId] = useState("");
 	const [datasetKind, setDatasetKind] = useState("sections");
+	console.log(file)
 
 	// Handle file selection from file explorer
 	const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
