@@ -79,9 +79,9 @@ const HomePage = () => {
 				throw new Error(errResponse.error);
 			}
 
-			alert("Dataset deleted successfully!");
-
 			setRefresh((prev) => !prev);
+
+			alert("Dataset deleted successfully!");
 		} catch (error) {
 			alert(error);
 			console.error("Error deleting dataset:", error);
