@@ -60,8 +60,6 @@ const HomePage = () => {
 				const errResponse = await response.json();
 				throw new Error(errResponse.error);
 			}
-
-			alert("Dataset uploaded successfully!");
 			setShowPopup(false);
 			setRefresh((prev) => !prev);
 		} catch (error) {
@@ -147,7 +145,7 @@ const HomePage = () => {
 					))}
 					<div className="pb-2">
 						<div
-							className="flex items-center p-3 justify-center text-gray-500 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
+							className="flex items-center p-3 justify-center text-gray-500 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer mb-12"
 							onClick={() => setShowPopup(true)}
 						>
 							+
